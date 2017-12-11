@@ -39,7 +39,7 @@ $ npm -v
 
 ```sh
 NEW_PROJECT_NAME=the-name &&
-git clone https://github.com/holvonix-open/new-ball $NEW_PROJECT_NAME &&
+git clone https://github.com/holvonix-open/new-ball --branch master --single-branch $NEW_PROJECT_NAME &&
 cd $NEW_PROJECT_NAME &&
 sh setup/setup-new-project.sh $NEW_PROJECT_NAME &&
 cat setup/SETUP.md
