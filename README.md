@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/holvonix-open/new-ball.svg?branch=master)](https://travis-ci.org/holvonix-open/new-ball)
 [![npm version](https://badge.fury.io/js/new-ball.svg)](https://badge.fury.io/js/new-ball)
 [![Greenkeeper badge](https://badges.greenkeeper.io/holvonix-open/new-ball.svg)](https://greenkeeper.io/)
+[![Coverage Status](https://coveralls.io/repos/github/holvonix-open/new-ball/badge.svg?branch=master)](https://coveralls.io/github/holvonix-open/new-ball?branch=master)
+[![codecov](https://codecov.io/gh/holvonix-open/new-ball/branch/master/graph/badge.svg)](https://codecov.io/gh/holvonix-open/new-ball)
 
 Make a new ball o' yarn (a template for generating Holvonix yarn-based node packages)
 

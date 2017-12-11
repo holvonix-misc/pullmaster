@@ -1,0 +1,5 @@
+exclude_patterns:
+- "lib/**"
+- "src/**/*.test.js"
+- "scripts/"
+- "node_modules"
