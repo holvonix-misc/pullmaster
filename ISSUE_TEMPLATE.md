@@ -1,4 +1,4 @@
-We aren't currently accepting pull requests for this repository.
+See general rules in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Licensing
 

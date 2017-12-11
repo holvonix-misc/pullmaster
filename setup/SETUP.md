@@ -13,7 +13,6 @@ After running setup-new-project.sh:
 1. Get the holvonix-bot NPM auth token
 2. `travis setup npm -f`, and it should look like:
 
-
 ```sh
 $ travis setup npm -f
 NPM email address: github-external-bot@holvonix.com
@@ -24,7 +23,6 @@ Encrypt API key? |yes|
 ```
 
 3. Manually edit .travis.yml deploy section to look like:
-
 
 ```yaml
 deploy:
@@ -56,7 +54,11 @@ deploy:
 
 ## Push to GitHub
 
-`rm -rf setup && git add . && git commit -m 'Project setup' && git push`
+    rm -rf setup && git add . && git commit -m 'PROJECT SETUP FOR: new-ball
+
+    Template generated from https://github.com/holvonix-open/NEWBALLHEADREF
+
+    ' && git push
 
 ## Setup Greenkeeper
 
