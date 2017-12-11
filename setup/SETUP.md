@@ -56,7 +56,7 @@ deploy:
 
     rm -rf setup && git add . && git commit -m 'PROJECT SETUP FOR: new-ball
 
-    Template generated from https://github.com/holvonix-open/NEWBALLHEADREF
+    Template generated from https://github.com/holvonix-open/newball/NEWBALLHEADREF
 
     ' && git push
 
