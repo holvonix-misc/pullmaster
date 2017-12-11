@@ -1,0 +1,36 @@
+language: node_js
+node_js:
+- node
+- '8'
+- '7'
+- '6'
+- '5'
+- '4'
+sudo: false
+before_install:
+- curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.3.2
+- export PATH=$HOME/.yarn/bin:$PATH
+- yarn global add greenkeeper-lockfile@1
+cache:
+  yarn: true
+  directories: []
+install: yarn install --ignore-scripts
+before_script: greenkeeper-lockfile-update
+script: yarn
+after_script: greenkeeper-lockfile-upload
+before_deploy: yarn tidy-ci
+deploy:
+  provider: npm
+  email: github-external-bot@holvonix.com
+  skip_cleanup: true
+  api_key:
+    secure: NNN_NPM_API_KEY
+  on:
+    node: node
+    tags: true
+    branch: master
+    repo: holvonix-open/new-ball
+#env:
+#  global:
+#  - secure: NNN_GH_TOKEN
+#  - secure: NNN_GH_RO_TOKEN

@@ -1,0 +1,81 @@
+{
+  "name": "new-ball",
+  "version": "0.0.1-SNAPSHOT",
+  "private": true,
+  "description": "Template for a new yarn-based node package",
+  "main": "lib/index.js",
+  "scripts": {
+    "lint": "eslint src --fix",
+    "build": "babel src/ -d lib/",
+    "test": "jest",
+    "precommit": "lint-staged && yarn prepare",
+    "contrib": "./scripts/contrib.sh",
+    "changelog":
+      "github-changes -o holvonix-open -r new-ball -n latest --order-semver --use-commit-body && prettier --write CHANGELOG.md",
+    "tidy": "yarn contrib && yarn changelog",
+    "changelog-ci":
+      "github-changes -o holvonix-open -r new-ball -n latest --order-semver --use-commit-body --token $GH_RO_TOKEN && prettier --write CHANGELOG.md",
+    "tidy-ci": "yarn contrib && yarn changelog-ci",
+    "prepare": "yarn lint && yarn build && yarn test"
+  },
+  "engines": {
+    "node": ">=4.0.0",
+    "yarn": "^1.3.2"
+  },
+  "keywords": ["KEYWORDS"],
+  "lint-staged": {
+    "src/**/*.{js,jsx}": ["prettier --parser flow --write", "git add"],
+    "**/*.{json,md}": ["prettier --write", "git add"]
+  },
+  "homepage": "https://github.com/holvonix-open/new-ball#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holvonix-open/new-ball.git"
+  },
+  "author":
+    "Holvonix LLC and the new-ball AUTHORS <sourcecode@holvonix.com> (https://github.com/holvonix-open/new-ball)",
+  "contributors": ["See AUTHORS file", "See CONTRIBUTORS file"],
+  "files": [
+    "lib/",
+    "CHANGELOG.md",
+    "package.json",
+    "LICENSE",
+    "AUTHORS",
+    "NOTICE",
+    "README.md",
+    "CONTRIBUTORS",
+    ".flowconfig",
+    ".babelrc",
+    ".eslintrc.json",
+    ".npmignore",
+    ".gitignore",
+    ".travis.yml",
+    "yarn.lock"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "6.26.0",
+    "babel-eslint": "8",
+    "babel-jest": "^21.2.0",
+    "babel-preset-flow": "^6.23.0",
+    "eslint": "^4.13.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-flowtype": "^2.39.1",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jest": "^21.4.2",
+    "eslint-plugin-prettier": "^2.3.1",
+    "flow-bin": "^0.61.0",
+    "git-contributors": "^0.2.3",
+    "github-changes": "^1.1.1",
+    "husky": "^0.14.3",
+    "jest-cli": "^21.2.1",
+    "lint-staged": "^6.0.0",
+    "prettier": "^1.9.1",
+    "semver": "^5.4.1"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}
