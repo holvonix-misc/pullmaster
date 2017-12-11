@@ -36,13 +36,11 @@ $ npm -v
 2. Shell execute:
 
 ```sh
-(
-  NEW_PROJECT_NAME=the-name &&
-  git clone https://github.com/holvonix-open/new-ball $NEW_PROJECT_NAME &&
-  cd $NEW_PROJECT_NAME &&
-  sh setup/setup-new-project.sh $NEW_PROJECT_NAME &&
-  rm -rf setup
-)
+NEW_PROJECT_NAME=the-name &&
+git clone https://github.com/holvonix-open/new-ball $NEW_PROJECT_NAME &&
+cd $NEW_PROJECT_NAME &&
+sh setup/setup-new-project.sh $NEW_PROJECT_NAME &&
+cat setup/SETUP.md
 ```
 
 3. Follow the instructions output by `setup-new-project.sh`

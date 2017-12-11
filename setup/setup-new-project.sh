@@ -24,6 +24,11 @@ sed -i -- "s/new-ball/$NEW_PROJECT_NAME/g" `find scripts/* -maxdepth 1 -type f`
 sed -i -- "s/new-ball/$NEW_PROJECT_NAME/g" `find src/* -maxdepth 1 -type f`
 sed -i -- "s/new-ball/$NEW_PROJECT_NAME/g" setup/SETUP.md
 
+# Silly sed files.
+rm -f .*--
+rm -f *--
+rm -f */*--
+
 yarn install
 
 yarn upgrade-interactive --latest
