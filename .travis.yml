@@ -31,7 +31,7 @@ script:
     echo Normal build - frozen lockfile; yarn install --frozen-lockfile;
   fi
 - cat ./coverage/lcov.info | coveralls
-- codecov
+- codecov -f coverage/coverage-final.json
 after_script: greenkeeper-lockfile-upload
 before_deploy: yarn tidy-ci
 deploy:

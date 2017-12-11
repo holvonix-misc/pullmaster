@@ -58,17 +58,20 @@ All as user @holvonix-bot:
 
 1. Coveralls: https://coveralls.io/repos/new?name=holvonix-open&service=github - sync and enable the new repo.
 2. Codecov: https://codecov.io/gh/holvonix-open/+ - sync and enable the new repo.
-3. Code Climate: https://codeclimate.com/github/repos/new - sync and enable the new repo. Then Settings -> Git repository -> install all hooks.
+3. Code Climate: https://codeclimate.com/github/repos/new - sync and enable the new repo. Then Settings -> Git repository -> install all hooks. Also add the badge to the README.md
 
 ## Push to GitHub
 
-    rm -rf setup && git add . && git commit -m 'PROJECT SETUP FOR: new-ball
+    git add . && git commit -m 'PROJECT SETUP FOR: new-ball
 
     Template generated from https://github.com/holvonix-open/newball/NEWBALLHEADREF
 
     ' && git push
 
-## Setup Greenkeeper
+## Setup Dependency Analyzers
 
-1. Visit https://account.greenkeeper.io/account/holvonix-open as @holvonix-bot
-2. Merge in the Greenkeeper PRs as applicable.
+All as user @holvonix-bot:
+
+1. Greenkeeper: Visit https://account.greenkeeper.io/account/holvonix-open and merge in the PRs as applicable.
+2. Dependabot: https://app.dependabot.com/accounts/holvonix-open/repos and merge in the PRs as applicable.
+3. Snyk: https://snyk.io/org/holvonix-bot/sources/9a3e5d90-b782-468a-a042-9a2073736f0b/repos - sync and enable the new repo.
