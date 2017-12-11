@@ -52,6 +52,14 @@ deploy:
 * Name: new-ball-GH_RO_TOKEN_TRAVIS
 * Install: `travis encrypt GH_RO_TOKEN=token --add`
 
+## Setup Code Coverage and Analysis
+
+All as user @holvonix-bot:
+
+1. Coveralls: https://coveralls.io/repos/new?name=holvonix-open&service=github - sync and enable the new repo.
+2. Codecov: https://codecov.io/gh/holvonix-open/+ - sync and enable the new repo.
+3. Code Climate: https://codeclimate.com/github/repos/new - sync and enable the new repo. Then Settings -> Git repository -> install all hooks.
+
 ## Push to GitHub
 
     rm -rf setup && git add . && git commit -m 'PROJECT SETUP FOR: new-ball
