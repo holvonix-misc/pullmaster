@@ -8,37 +8,7 @@ After running setup-new-project.sh:
 4. Switch ON for 'Build only if .travis.yml is present'
 5. Add a cron job: master, daily, always run.
 
-## Setup Travis to publish to NPMJS.com as holvonix-bot
-
-1. Get the holvonix-bot NPM auth token
-2. `travis setup npm -f`, and it should look like:
-
-```sh
-$ travis setup npm -f
-NPM email address: github-external-bot@holvonix.com
-NPM api key: ************************************
-release only tagged commits? |yes|
-Release only from holvonix-open/new-ball? |yes|
-Encrypt API key? |yes|
-```
-
-3. Manually edit .travis.yml deploy section to look like:
-
-```yaml
-deploy:
-  provider: npm
-  email: github-external-bot@holvonix.com
-  skip_cleanup: true
-  api_key:
-    secure: NNN_NPM_API_KEY
-  on:
-    node: node
-    tags: true
-    branch: master
-    repo: holvonix-open/new-ball
-```
-
-## Setup GitHub api keys
+## Setup GitHub and NPM api keys
 
 1. As user @holvonix-bot, generate this auth token for Greenkeeper at https://github.com/settings/tokens/new
 
@@ -51,6 +21,10 @@ deploy:
 * Scope: [none]
 * Name: new-ball-GH_RO_TOKEN_TRAVIS
 * Install: `travis encrypt GH_RO_TOKEN=token --add`
+
+3. As user @holvonix-bot, generate or use an NPM api key:
+
+* Install: `travis encrypt NPM_API_KEY=token --add`
 
 ## Setup Code Coverage and Analysis
 
