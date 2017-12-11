@@ -25,7 +25,7 @@ sed -i -- "s/new-ball/$NEW_PROJECT_NAME/g" `find src/* -maxdepth 1 -type f`
 sed -i -- "s/new-ball/$NEW_PROJECT_NAME/g" setup/SETUP.md
 REVHEAD=`git rev-parse HEAD`
 sed -i -- "s/NEWBALLHEADREF/$REVHEAD/g" setup/SETUP.md
-sed -i -- "s/newball/$NEW_PROJECT_NAME/g" setup/SETUP.md
+sed -i -- "s/newball/new-ball/g" setup/SETUP.md
 
 # Silly sed files.
 rm -f .*--
