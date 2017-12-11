@@ -2,22 +2,34 @@ language: node_js
 node_js:
 - node
 - '8'
-- '7'
-- '6'
-- '5'
+#- '7'
+#- '6'
+#- '5'
 - '4'
 sudo: false
 before_install:
 - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.3.2
 - export PATH=$HOME/.yarn/bin:$PATH
+- export BRANCH="${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}"
 - yarn global add greenkeeper-lockfile@1
 - yarn global add coveralls
 - yarn global add codecov
 cache: false
-install: yarn install --ignore-scripts --frozen-lockfile
+install:
+- |
+  if [[ $BRANCH == "greenkeeper/"* ]]; then
+    echo Greenkeeper build; yarn install --ignore-scripts;
+  else
+    echo Normal build - frozen lockfile; yarn install --ignore-scripts --frozen-lockfile;
+  fi
 before_script: greenkeeper-lockfile-update
 script:
-- yarn
+- |
+  if [[ $BRANCH == "greenkeeper/"* ]]; then
+    echo Greenkeeper build; yarn install;
+  else
+    echo Normal build - frozen lockfile; yarn install --frozen-lockfile;
+  fi
 - cat ./coverage/lcov.info | coveralls
 - codecov
 after_script: greenkeeper-lockfile-upload
