@@ -56,7 +56,7 @@ jobs:
     script:
       - yarn install --frozen-lockfile
       - yarn test
-      - tarn tidy-ci
+      - yarn tidy-ci
     after_script: []
     deploy:
       provider: npm
