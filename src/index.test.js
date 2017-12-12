@@ -36,7 +36,9 @@ function getSample() {
   });
 
   const mockReq = {
-    headers: {},
+    headers: {
+      "x-github-event": "pull_request"
+    },
     body: {
       action: "opened",
       pull_request: {
@@ -68,7 +70,7 @@ function getSample() {
           .digest("hex");
         mockReq.headers["x-hub-signature"] = `sha1=${digest}`;
       }
-      return program.handleNewPullRequest(mockSettings, mockReq, mockRes);
+      return program.handle(mockSettings, mockReq, mockRes);
     },
     mocks: {
       got: mockGot,
@@ -77,6 +79,15 @@ function getSample() {
     }
   };
 }
+
+it("should only look at pull requests", () => {
+  const sample = getSample();
+  sample.mocks.req.headers["x-github-event"] = "repository";
+
+  sample.execute();
+
+  assert.equal(sample.mocks.res.end.callCount, 1);
+});
 
 it("should only look at new pull requests", () => {
   const sample = getSample();

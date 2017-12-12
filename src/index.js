@@ -17,11 +17,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 /* eslint-disable */
-// no-flow-yet
+// @flow
 
 const crypto = require("crypto");
 const got = require("got");
 const url = require("url");
+
+const defaultSettings = {
+  user: "__non-existent-example-bot",
+  secretToken: "WebHook shared secret",
+  accessToken: "OAUTH access token",
+  reviewers: ["__non-existent-example-user"],
+  // add comments showing what the bot does
+  useComments: false
+};
+
+function handle(settings: any, req: any, res: any) {
+  const action = req.body.action;
+  const event = req.headers["x-github-event"];
+
+  if (event === "pull_request") {
+    if (action === "opened") {
+      return handlePullRequestOpened(settings, req, res);
+    }
+  }
+
+  // Ignore it!
+  res.end();
+  return;
+}
 
 /**
  * Assigns a reviewer to a new pull request from a list of eligble reviewers.
@@ -32,15 +56,9 @@ const url = require("url");
  * @param {object} req
  * @param {object} res
  */
-function handleNewPullRequest(settings, req, res) {
-  // We only care about newly opened pull requests
-  if (req.body.action !== "opened") {
-    res.end();
-    return;
-  }
-
+function handlePullRequestOpened(settings: any, req: any, res: any) {
   const pullRequest = req.body.pull_request;
-  console.log(`New PR: ${pullRequest.title}`);
+  console.log(`New PR: ${pullRequest.title} by ${pullRequest.user.login}`);
 
   // Validate the request
   return (
@@ -72,7 +90,7 @@ function handleNewPullRequest(settings, req, res) {
  *
  * @param {object} req
  */
-function validateRequest(settings, req) {
+function validateRequest(settings: any, req: any) {
   return Promise.resolve().then(() => {
     const digest = crypto
       .createHmac("sha1", settings.secretToken)
@@ -80,7 +98,7 @@ function validateRequest(settings, req) {
       .digest("hex");
 
     if (req.headers["x-hub-signature"] !== `sha1=${digest}`) {
-      const error = new Error("Unauthorized");
+      const error: any = new Error("Unauthorized");
       error.statusCode = 403;
       throw error;
     } else {
@@ -95,8 +113,8 @@ function validateRequest(settings, req) {
  * @param {string} uri
  * @param {object} [options]
  */
-function makeRequest(settings, uri, options) {
-  options || (options = {});
+function makeRequest(settings: any, uri: string, opts: ?any) {
+  var options = opts || {};
 
   // Add appropriate headers
   options.headers || (options.headers = {});
@@ -114,7 +132,7 @@ function makeRequest(settings, uri, options) {
 
   // Add authentication
   const parts = url.parse(uri);
-  parts.auth = `jmdobry:${settings.accessToken}`;
+  parts.auth = `${settings.user}:${settings.accessToken}`;
 
   // Make the request
   return got(parts, options).then(res => res.body);
@@ -126,7 +144,7 @@ function makeRequest(settings, uri, options) {
  * @param {object} repo
  * @param {number} [page]
  */
-function getPullRequests(settings, repo, page) {
+function getPullRequests(settings: any, repo: any, page: ?number) {
   const PAGE_SIZE = 100;
 
   if (!page) {
@@ -167,7 +185,7 @@ function getPullRequests(settings, repo, page) {
  *
  * @param {object[]} pullRequests
  */
-function getReviewsForPullRequests(settings, pullRequests) {
+function getReviewsForPullRequests(settings: any, pullRequests: Array<any>) {
   console.log(`Retrieving reviews for ${pullRequests.length} pull requests.`);
   // Make a request for each pull request's reviews
   const tasks = pullRequests.map(pr =>
@@ -196,7 +214,7 @@ function getReviewsForPullRequests(settings, pullRequests) {
  *
  * @param {object[]} pullRequests
  */
-function calculateWorkloads(settings, pullRequests) {
+function calculateWorkloads(settings: any, pullRequests: Array<any>) {
   // Calculate the current workloads of each reviewer
   const reviewers = {};
   settings.reviewers.forEach(reviewer => {
@@ -237,7 +255,11 @@ function calculateWorkloads(settings, pullRequests) {
  * @param {object} pullRequest
  * @param {object[]} pullRequests
  */
-function getNextReviewer(settings, pullRequest, pullRequests) {
+function getNextReviewer(
+  settings: any,
+  pullRequest: any,
+  pullRequests: Array<any>
+) {
   let workloads = calculateWorkloads(settings, pullRequests);
 
   workloads = workloads
@@ -262,18 +284,26 @@ function getNextReviewer(settings, pullRequest, pullRequests) {
  * @param {string} reviewer
  * @param {object} pullRequest
  */
-function assignReviewer(settings, reviewer, pullRequest) {
+function assignReviewer(settings: any, reviewer: string, pullRequest: any) {
   console.log(`Assigning pull request to ${reviewer}.`);
-  return makeRequest(settings, `${pullRequest.url}/requested_reviewers`, {
-    body: {
-      reviewers: [reviewer]
-    }
-  });
+  const primary = () => {
+    makeRequest(settings, `${pullRequest.url}/requested_reviewers`, {
+      body: {
+        reviewers: [reviewer]
+      }
+    });
+  };
+
+  if (settings.useComments) {
+    return makeRequest(settings, pullRequest.comments_url, {
+      body: {
+        body: `Assigning pull request to ${reviewer}.`
+      }
+    }).then(primary);
+  }
+  return primary();
 }
 
 module.exports = {
-  assignReviewer,
-  getNextReviewer,
-  calculateWorkloads,
-  handleNewPullRequest
+  handle
 };
