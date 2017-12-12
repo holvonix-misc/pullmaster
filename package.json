@@ -55,7 +55,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
-    "js-devbox": "^1.1.2"
+    "js-devbox": "^2.0.2"
   },
   "jest": {
     "testEnvironment": "node",
