@@ -55,9 +55,9 @@ jobs:
     before_script: []
     script:
       - yarn install --frozen-lockfile
-      - yarn prepublish
+      - yarn test
+      - tarn tidy-ci
     after_script: []
-    before_deploy: yarn tidy-ci
     deploy:
       provider: npm
       email: github-external-bot@holvonix.com
