@@ -48,4 +48,4 @@ All as user @holvonix-bot:
 1. Greenkeeper: Visit https://account.greenkeeper.io/account/holvonix-open and merge in the PRs as applicable.
 2. Dependabot: https://app.dependabot.com/accounts/holvonix-open/repos and merge in the PRs as applicable.
 3. Snyk: https://snyk.io/org/holvonix-bot/sources/9a3e5d90-b782-468a-a042-9a2073736f0b/repos - sync and enable the new repo.
-4. Codacy - https://www.codacy.com/app/holvonix-open and sync and enable, and add the badge too.
+4. Codacy - https://www.codacy.com/app/holvonix-open and sync and enable, and add the badge too. Then enable all integrations at https://www.codacy.com/app/holvonix-open/new-ball/settings/integrations
