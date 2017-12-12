@@ -8,7 +8,6 @@ before_install:
 - export PATH=$HOME/.yarn/bin:$PATH
 - export BRANCH="${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}"
 - yarn global add greenkeeper-lockfile@1
-- yarn global add coveralls
 - yarn global add codecov
 cache: false
 install:
@@ -21,7 +20,6 @@ install:
 before_script: greenkeeper-lockfile-update
 script:
 - yarn test
-- cat ./coverage/lcov.info | coveralls
 - codecov -f coverage/coverage-final.json
 after_script: greenkeeper-lockfile-upload
 stages:

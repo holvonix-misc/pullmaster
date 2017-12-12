@@ -30,9 +30,8 @@ After running setup-new-project.sh:
 
 All as user @holvonix-bot:
 
-1. Coveralls: https://coveralls.io/repos/new?name=holvonix-open&service=github - sync and enable the new repo.
-2. Codecov: https://codecov.io/gh/holvonix-open/+ - sync and enable the new repo.
-3. Code Climate: https://codeclimate.com/github/repos/new - sync and enable the new repo. Then Settings -> Git repository -> install all hooks. Also add the badge to the README.md
+1. Codecov: https://codecov.io/gh/holvonix-open/+ - sync and enable the new repo.
+2. Code Climate: https://codeclimate.com/github/repos/new - sync and enable the new repo. Then Settings -> Git repository -> install all hooks. Also add the badge to the README.md
 
 ## Push to GitHub
 
@@ -49,3 +48,4 @@ All as user @holvonix-bot:
 1. Greenkeeper: Visit https://account.greenkeeper.io/account/holvonix-open and merge in the PRs as applicable.
 2. Dependabot: https://app.dependabot.com/accounts/holvonix-open/repos and merge in the PRs as applicable.
 3. Snyk: https://snyk.io/org/holvonix-bot/sources/9a3e5d90-b782-468a-a042-9a2073736f0b/repos - sync and enable the new repo.
+4. Codacy - https://www.codacy.com/app/holvonix-open and sync and enable, and add the badge too.
