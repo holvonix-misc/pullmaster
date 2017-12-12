@@ -15,9 +15,7 @@
     "prepublishOnly": "yarn test",
     "preversion": "yarn test",
     "test": "yarn lint && yarn run flow && yarn build && yarn test-only",
-    "test-only": "nyc mocha -t 60000 ./*/*.test.js",
-    "contrib": "./scripts/contrib.sh",
-    "tidy-ci": "yarn contrib"
+    "test-only": "nyc mocha -t 60000 ./*/*.test.js"
   },
   "engines": {
     "node": ">=6.9.0",
