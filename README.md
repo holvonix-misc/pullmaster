@@ -1,5 +1,6 @@
 # pullmaster
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/316fc378652343d6bffdb44758c208f0)](https://www.codacy.com/app/holvonix-open/pullmaster?utm_source=github.com&utm_medium=referral&utm_content=holvonix-open/pullmaster&utm_campaign=badger)
 [![Build Status](https://travis-ci.org/holvonix-open/pullmaster.svg?branch=master)](https://travis-ci.org/holvonix-open/pullmaster)
 [![npm version](https://badge.fury.io/js/pullmaster.svg)](https://badge.fury.io/js/pullmaster)
 [![Greenkeeper badge](https://badges.greenkeeper.io/holvonix-open/pullmaster.svg)](https://greenkeeper.io/)
