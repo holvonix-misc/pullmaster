@@ -14,18 +14,13 @@ cache: false
 install:
 - |
   if [[ $BRANCH == "greenkeeper/"* ]]; then
-    echo Greenkeeper build; yarn install --ignore-scripts;
-  else
-    echo Normal build - frozen lockfile; yarn install --ignore-scripts --frozen-lockfile;
-  fi
-before_script: greenkeeper-lockfile-update
-script:
-- |
-  if [[ $BRANCH == "greenkeeper/"* ]]; then
     echo Greenkeeper build; yarn install;
   else
     echo Normal build - frozen lockfile; yarn install --frozen-lockfile;
   fi
+before_script: greenkeeper-lockfile-update
+script:
+- yarn test
 - cat ./coverage/lcov.info | coveralls
 - codecov -f coverage/coverage-final.json
 after_script: greenkeeper-lockfile-upload
@@ -58,7 +53,9 @@ jobs:
     - export PATH=$HOME/.yarn/bin:$PATH
     install: []
     before_script: []
-    script: yarn install --frozen-lockfile
+    script:
+      - yarn install --frozen-lockfile
+      - yarn prepublish
     after_script: []
     before_deploy: yarn tidy-ci
     deploy:

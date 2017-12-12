@@ -5,18 +5,19 @@
   "description": "Template for a new yarn-based node package",
   "main": "lib/index.js",
   "scripts": {
-    "lint": "eslint src --fix",
-    "build": "babel src/ -d lib/",
-    "test": "jest",
-    "precommit": "lint-staged && yarn prepare",
+    "build": "yarn run clean && yarn babel src/ -d lib/",
+    "clean": "rm -rf lib",
+    "flow": "flow",
+    "lint": "eslint src",
+    "precommit": "lint-staged && yarn test",
+    "prepare": "yarn build",
+    "prepack": "yarn prepare",
+    "prepublish": "yarn prepare",
+    "preversion": "yarn test",
+    "test": "yarn lint && yarn run flow && yarn build && yarn test-only",
+    "test-only": "jest",
     "contrib": "./scripts/contrib.sh",
-    "changelog":
-      "github-changes -o holvonix-open -r new-ball -n latest --order-semver --use-commit-body && prettier --write CHANGELOG.md",
-    "tidy": "yarn contrib && yarn changelog",
-    "changelog-ci":
-      "github-changes -o holvonix-open -r new-ball -n latest --order-semver --use-commit-body --token $GH_RO_TOKEN && prettier --write CHANGELOG.md",
-    "tidy-ci": "yarn contrib && yarn changelog-ci",
-    "prepare": "yarn lint && yarn build && yarn test"
+    "tidy-ci": "yarn contrib"
   },
   "engines": {
     "node": ">=4.0.0",
