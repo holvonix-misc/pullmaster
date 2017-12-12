@@ -2031,9 +2031,9 @@ jest-validate@^21.1.0, jest-validate@^21.2.1:
     leven "^2.1.0"
     pretty-format "^21.2.1"
 
-js-devbox@^1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/js-devbox/-/js-devbox-1.1.2.tgz#515c522a6c9cf8cb40661d89f841976cc65687f5"
+js-devbox@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/js-devbox/-/js-devbox-2.0.2.tgz#3f7bd745c7f2460de2bb85b1487c1f1594e2bd40"
   dependencies:
     babel-cli "^6.26.0"
     babel-core "6.26.0"
