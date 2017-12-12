@@ -52,9 +52,9 @@ jobs:
     install: []
     before_script: []
     script:
-      - yarn install --frozen-lockfile
-      - yarn test
-      - yarn tidy-ci
+    - yarn install --frozen-lockfile
+    - yarn test
+    - yarn tidy-ci
     after_script: []
     deploy:
       provider: npm
@@ -63,3 +63,8 @@ jobs:
       api_key: "$NPM_API_KEY"
       on:
         tags: true
+env:
+  global:
+  - secure: d08u+cBSeffYJ3ALC0wI5CI4AF/boNJ3TNtyVSZ0ZNm9VLb2LKUXtf/AqKn4SkiZ+b0pt03OIY0df7WyZO0l0lkNkVRPgUurUgqpEDoehDzPGXtP7BFkSC3Auq48R8e1bu9zR1nSv/FcdVCeRQPEWiO5ztHX40HVRREiarz6pFPBiU1vXjuvbdyP3sv76yFRqLj5eOgmI0HXadWCbVEUxJfMxvXusWWXNyAyK3EMX2tn5AVAbhUj3mJ9LGyx+wtsuIWiQTO+nxxq5ImI3Szth6/XB7QeGLBIrtI2NoEKU+gcTdpm4grRuy7myMlw16gWu4unZjkJpFOhEcQiDPkT6/A/4u4w8mjABvMrdxYpuC/sCPqgMv9cMytHAP5HwKQFtscxSTh+GC6hyAEIdINFt6dQM2lbFi7QThgTp6aup2OWQP6Hkf8Wq5+hfwk5BLJ8HdWUKc69Gvx5xg2Hr8tNeEi/kDuK+NBNDEh0gaXRYcfiWE1hViWKr/ZvOPLh0iM8OGgR2t3G86wWYobVutnxpB6sabXu/dKD/xc/Uo/MGKoHl1id930DfhJzfoBH2omrkeR2sFPjxHtouJ2U51Y0ZwupriZMRyKWVDYvHMRqfBhRBq0ZwovE0xxekQbKastGuYnQzedfOpNtCUg41ZnXjAj8X1VHZFraiG+HUX0aH+Q=
+  - secure: be23K5oU5NI9E3SpsH3AvsQDYWqoKioOuKFc6J4oZCHovrgn5rAgKEUyjnqCXwN5Awaj2UsUSiJGWnXPZD407ZXrsVLn2cYF5MQe1QHj7imL9qSLi03xtmlls/OGViXXWw3cQtDa2bqhidu4qD4Cbdmnes9UUq6WAskhMApQdzsTcL+BO9sDLK2SSbG0kOfH2J3FSkp4FBzXdsV4MZ1bFoS+VA3b39d4e0FEpPN37eP2oREnu5t5Tyk8Om6H0yL3MQGaV2VA8XxCRcKSVP/BJVtEh6nZrlJAhnW6nRbSfKa17KEOhtbjnfcScQed/B/ep1UExrLArjlkAG5D/FSEwzFaYp9OSTjqABIhrF8YGTySPHAai+CgTmYHdNz669dTiLsMOLi7SnoO4J77r+zgcSr2mfsy8+asPKTkfNY9ghO3gsG5dzz+mpjupE3bHxjxqu85sWdd4eO+wykQ4SUJty0IH900F95EFg+kuZKo87EPGcolckKX0IwFm/ykoOKLZ6y4FMYIkTrFQU20f00oiz07pjoCwZTmih8V418sSDY3k7jzTvOeLO0yh8QhR0tTgmzfokV0Vmz9yAnQ8kdrXMueIQed9cTOO1KaN4fJeRtnJ5vWeQPZjYZSyYrkRfNNBDyXJ4vi2IeOBYTvsi8hc4w/s/ktW90NscWnPJRSSFU=
+  - secure: q945L8VlaiQkn836kYu64nv8R6BLXc07J3dfFJv1gMEO306f0Ti+8ZIDBW2lbAd7yIS6TNWKtSxUzUz5jUVsd2FeuxW1J+GnLZYqyDen70qiSKrXNyjywIyN+ItI/kySBnMhckdy8DNAWoeIrheMiyihisbwh4nfT0cfnstLYGOW83BSe7NYV0pAYv1dhDSLbUxTkW8RQ1rmSXeHWjRnQxXoYxc3SbtuVk2i4V356MuEwL7zdnnfobxyhmu8TSNyaGBSZ+OO284DVvOslrqCbHp3GE9+lQ/OzQdZisK1378fkd1JDWMkchq6rQSyP/hJcwDv0shgcsSwsRg2eUPJyAjjwRC4HA8JT/VIq5kY0uCB+xwzRQkcCp4WjeQppm27OLbqOQ2TeYi54t0TyN7iiCI0EweHYIn5gQEDAlJw6m5Yv/423bGXisClxxpGHY/Ra2UDLQZrcQDycJtXbxUVON9+M6i2kzwi2N0FIovfYmfke3kpn0/9ojl2sLflPXz4YGR3JkpUj50K8e9xukaUxvx0Cg1r4uV6LlZWrrDZUuciidXf+XO5fLQ6HPbDSTUJp+AMgPi8SvDqzgFNix78kOmdmnVq448cBpAUTynqz/JIiFfqr+Sua0HGQmzvii/bVa9MJCf8cYwkg9FWs/7jv8aOtTIMpoFpXR9pXuMs8xM=

@@ -21,7 +21,7 @@ Every new file should have the header (using appropriate comment delimiters):
 
 ```
 /*
-Copyright (c) 2017 Holvonix LLC and the new-ball AUTHORS
+Copyright (c) 2017 Holvonix LLC and the pullmaster AUTHORS
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
