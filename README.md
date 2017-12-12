@@ -12,7 +12,7 @@ Make a new ball o' yarn (a template for generating Holvonix yarn-based node pack
 
 ## Installation
 
-TODO: Fill-in with real repo instructions.
+TODO: Fill-in with real repo instructions. :stuck_out_tongue:
 
 ## Usage
 
