@@ -17,30 +17,50 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 /* eslint-disable */
-// no-flow-yet
+// @flow
 
 const crypto = require("crypto");
 const got = require("got");
 const url = require("url");
 
+const defaultSettings = {
+  user: "__non-existent-example-bot",
+  secretToken: "WebHook shared secret",
+  accessToken: "OAUTH access token",
+  reviewers: ["__non-existent-example-user"],
+  // people who can issue commands via comments
+  admins: ["__non-existent-example-admin"],
+  // add comments showing what the bot does
+  useComments: false
+};
+
+function handle(settings: any, req: any, res: any) {
+  const action = req.body.action;
+  const event = req.headers["x-github-event"];
+
+  if (event === "pull_request") {
+    if (action === "opened") {
+      return handlePullRequestOpened(settings, req, res);
+    }
+  } else if (event == "issue_comment" && "pull_request" in req.body.issue) {
+    if (action === "created") {
+      return handlePullRequestCommentCreated(settings, req, res);
+    }
+  }
+
+  // Ignore it!
+  res.end();
+  return;
+}
+
 /**
  * Assigns a reviewer to a new pull request from a list of eligble reviewers.
  * Reviewers with the least assigned reviews on open pull requests will be
  * prioritized for assignment.
- *
- * @param {object} settings
- * @param {object} req
- * @param {object} res
  */
-function handleNewPullRequest(settings, req, res) {
-  // We only care about newly opened pull requests
-  if (req.body.action !== "opened") {
-    res.end();
-    return;
-  }
-
+function handlePullRequestOpened(settings: any, req: any, res: any) {
   const pullRequest = req.body.pull_request;
-  console.log(`New PR: ${pullRequest.title}`);
+  console.log(`New PR: ${pullRequest.title} by ${pullRequest.user.login}`);
 
   // Validate the request
   return (
@@ -57,22 +77,111 @@ function handleNewPullRequest(settings, req, res) {
         res.status(200).end();
       })
       .catch(err => {
-        console.error(err.stack);
-        res
-          .status(err.statusCode ? err.statusCode : 500)
-          .send(err.message)
-          .end();
+        handleResponseThrow(settings, err, req, res);
       })
   );
 }
 
 /**
+ * Handles commands issues via a pull request comment.
+ */
+function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
+  const pullRequest = req.body.issue.pull_request;
+  const pullRequestUrl = req.body.issue.pull_request.url;
+  const author = req.body.comment.user.login || "";
+  const content = req.body.comment.body || "";
+  const commentPostUrl = req.body.issue.comments_url;
+  console.log(`Comment on PR: ${pullRequest.title} by ${author}`);
+
+  // Validate the request
+  return validateRequest(settings, req)
+    .then(() => {
+      if (!settings.admins.includes(author)) {
+        // Ignore commands from non-admins
+        const error: any = new Error(`${author} is not an admin`);
+        error.statusCode = 202;
+        throw error;
+      }
+    })
+    .then(() => {
+      if (content.match(/(^|\s)#shipitnow($|\b)/gim)) {
+        const postIt = () => {
+          makeRequest(settings, pullRequestUrl).then(pr => {
+            const head = pr.head.sha;
+            const info = [
+              `Pull request author: @${pr.user.login}`,
+              `#shipitnow requested by: @${author}`,
+              `Pull request thread: ${pr.html_url}`
+            ];
+            return makeRequest(settings, pullRequestUrl + "/merge", {
+              body: {
+                commit_title: `Merge pull request #${pr.number} from ${
+                  pr.head.label
+                }`,
+                commit_message: info.join("\n\n"),
+                sha: head,
+                merge_method: "merge"
+              }
+            });
+          });
+        };
+        if (settings.useComments) {
+          return makeRequest(settings, commentPostUrl, {
+            body: {
+              body: `Command: Per @${author}, merging immediately`
+            }
+          }).then(postIt);
+        }
+        return postIt();
+      } else if (content.match(/(^|\s)#shipit($|\b)/gim)) {
+        // TODO: merge when green
+        if (settings.useComments) {
+          return makeRequest(settings, commentPostUrl, {
+            body: {
+              body: `Command: Per @${author}, merging when CI status is green (TODO)`
+            }
+          });
+        }
+      }
+
+      // Ignore anything that is not a known command
+      const error: any = new Error(`No known command in body.`);
+      error.statusCode = 202;
+      throw error;
+    })
+    .then(() => {
+      res.status(200).end();
+    })
+    .catch(err => {
+      handleResponseThrow(settings, err, req, res);
+    });
+}
+
+function handleResponseThrow(settings, err, req, res) {
+  if (200 <= err.statusCode && err.statusCode < 300) {
+    res
+      .status(err.statusCode)
+      .send(err.message)
+      .end();
+    return;
+  }
+
+  console.error(err.stack);
+  var msg = err.message;
+  if (settings.spewStack) {
+    msg = msg + "\n\n" + err.stack;
+  }
+  res
+    .status(err.statusCode ? err.statusCode : 503)
+    .send(msg)
+    .end();
+}
+
+/**
  * Validates the request.
  * See https://developer.github.com/webhooks/securing.
- *
- * @param {object} req
  */
-function validateRequest(settings, req) {
+function validateRequest(settings: any, req: any) {
   return Promise.resolve().then(() => {
     const digest = crypto
       .createHmac("sha1", settings.secretToken)
@@ -80,7 +189,7 @@ function validateRequest(settings, req) {
       .digest("hex");
 
     if (req.headers["x-hub-signature"] !== `sha1=${digest}`) {
-      const error = new Error("Unauthorized");
+      const error: any = new Error("Unauthorized");
       error.statusCode = 403;
       throw error;
     } else {
@@ -91,12 +200,9 @@ function validateRequest(settings, req) {
 
 /**
  * Helper method for making requests to the GitHub API.
- *
- * @param {string} uri
- * @param {object} [options]
  */
-function makeRequest(settings, uri, options) {
-  options || (options = {});
+function makeRequest(settings: any, uri: string, opts: ?any) {
+  var options = opts || {};
 
   // Add appropriate headers
   options.headers || (options.headers = {});
@@ -114,7 +220,7 @@ function makeRequest(settings, uri, options) {
 
   // Add authentication
   const parts = url.parse(uri);
-  parts.auth = `jmdobry:${settings.accessToken}`;
+  parts.auth = `${settings.user}:${settings.accessToken}`;
 
   // Make the request
   return got(parts, options).then(res => res.body);
@@ -122,11 +228,8 @@ function makeRequest(settings, uri, options) {
 
 /**
  * Recursively loads all open pull requests for the given repo.
- *
- * @param {object} repo
- * @param {number} [page]
  */
-function getPullRequests(settings, repo, page) {
+function getPullRequests(settings: any, repo: any, page: ?number) {
   const PAGE_SIZE = 100;
 
   if (!page) {
@@ -164,10 +267,8 @@ function getPullRequests(settings, repo, page) {
 
 /**
  * Loads the reviews for the given pull requests.
- *
- * @param {object[]} pullRequests
  */
-function getReviewsForPullRequests(settings, pullRequests) {
+function getReviewsForPullRequests(settings: any, pullRequests: Array<any>) {
   console.log(`Retrieving reviews for ${pullRequests.length} pull requests.`);
   // Make a request for each pull request's reviews
   const tasks = pullRequests.map(pr =>
@@ -193,10 +294,8 @@ function getReviewsForPullRequests(settings, pullRequests) {
 /**
  * Calculates the current workloads of the reviewers specified in
  * "settings.reviewers".
- *
- * @param {object[]} pullRequests
  */
-function calculateWorkloads(settings, pullRequests) {
+function calculateWorkloads(settings: any, pullRequests: Array<any>) {
   // Calculate the current workloads of each reviewer
   const reviewers = {};
   settings.reviewers.forEach(reviewer => {
@@ -233,11 +332,12 @@ function calculateWorkloads(settings, pullRequests) {
 
 /**
  * Selects the next reviewer based on current reviewer workloads.
- *
- * @param {object} pullRequest
- * @param {object[]} pullRequests
  */
-function getNextReviewer(settings, pullRequest, pullRequests) {
+function getNextReviewer(
+  settings: any,
+  pullRequest: any,
+  pullRequests: Array<any>
+) {
   let workloads = calculateWorkloads(settings, pullRequests);
 
   workloads = workloads
@@ -258,22 +358,27 @@ function getNextReviewer(settings, pullRequest, pullRequests) {
 
 /**
  * Assigns a reviewer to the given pull request.
- *
- * @param {string} reviewer
- * @param {object} pullRequest
  */
-function assignReviewer(settings, reviewer, pullRequest) {
+function assignReviewer(settings: any, reviewer: string, pullRequest: any) {
   console.log(`Assigning pull request to ${reviewer}.`);
-  return makeRequest(settings, `${pullRequest.url}/requested_reviewers`, {
-    body: {
-      reviewers: [reviewer]
-    }
-  });
+  const primary = () => {
+    makeRequest(settings, `${pullRequest.url}/requested_reviewers`, {
+      body: {
+        reviewers: [reviewer]
+      }
+    });
+  };
+
+  if (settings.useComments) {
+    return makeRequest(settings, pullRequest.comments_url, {
+      body: {
+        body: `Workflow: Assigning pull request to @${reviewer}.`
+      }
+    }).then(primary);
+  }
+  return primary();
 }
 
 module.exports = {
-  assignReviewer,
-  getNextReviewer,
-  calculateWorkloads,
-  handleNewPullRequest
+  handle
 };
