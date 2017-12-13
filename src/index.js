@@ -116,6 +116,7 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
               `Pull request thread: ${pr.html_url}`
             ];
             return makeRequest(settings, pullRequestUrl + "/merge", {
+              method: "PUT",
               body: {
                 commit_title: `Merge pull request #${pr.number} from ${
                   pr.head.label
