@@ -102,11 +102,13 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
         error.statusCode = 202;
         throw error;
       }
+      console.log(`Is admin: ${author}`);
     })
     .then(() => {
       if (content.match(/(^|\s)#shipitnow($|\b)/gim)) {
         const postIt = () => {
           makeRequest(settings, pullRequestUrl).then(pr => {
+            console.log(`Got PR info: ${pr.html_url}`);
             const head = pr.head.sha;
             const info = [
               `Pull request author: @${pr.user.login}`,
@@ -122,10 +124,14 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
                 sha: head,
                 merge_method: "merge"
               }
+            }).then(b => {
+              const s = JSON.stringify(b);
+              console.log(`Submitted merge: ${s}`);
             });
           });
         };
         if (settings.useComments) {
+          console.log(`Sent comment.`);
           return makeRequest(settings, commentPostUrl, {
             body: {
               body: `Command: Per @${author}, merging immediately`
