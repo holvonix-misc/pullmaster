@@ -359,7 +359,12 @@ function getNextReviewer(
 
   // Randomly choose from the remaining eligible reviewers:
   const choice = Math.floor(Math.random() * (MAX - MIN + 1)) + MIN;
-
+  if (!workloads[choice]) {
+    // No available reviewers.
+    const error: any = new Error(`No eligible reviewers.`);
+    error.statusCode = 202;
+    throw error;
+  }
   return workloads[choice].login;
 }
 

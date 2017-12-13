@@ -62,15 +62,19 @@ function getSample() {
   };
 
   return {
-    execute: bypassSecurity => {
+    execute: (bypassSecurity, overrideSettings) => {
+      var settings = mockSettings;
+      if (overrideSettings) {
+        settings = Object.assign(settings, overrideSettings);
+      }
       if (!bypassSecurity) {
         const digest = crypto
-          .createHmac("sha1", mockSettings.secretToken)
+          .createHmac("sha1", settings.secretToken)
           .update(JSON.stringify(mockReq.body))
           .digest("hex");
         mockReq.headers["x-hub-signature"] = `sha1=${digest}`;
       }
-      return program.handle(mockSettings, mockReq, mockRes);
+      return program.handle(settings, mockReq, mockRes);
     },
     mocks: {
       got: mockGot,
@@ -157,6 +161,51 @@ it("should assign next reviewer", () => {
   return sample.execute().then(() => {
     assert.equal(sample.mocks.res.status.callCount, 1);
     assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
+    assert.equal(sample.mocks.res.end.callCount, 1);
+  });
+});
+
+it("should skip pull requests with no eligible reviewers", () => {
+  const sample = getSample();
+  sample.mocks.got.onCall(0).returns(
+    Promise.resolve({
+      body: [
+        {
+          requested_reviewers: [],
+          user: {
+            login: "dev_1"
+          }
+        },
+        {
+          requested_reviewers: [],
+          user: {
+            login: "dev_2"
+          }
+        }
+      ]
+    })
+  );
+  sample.mocks.got.onCall(1).returns(
+    Promise.resolve({
+      body: []
+    })
+  );
+  sample.mocks.got.onCall(2).returns(
+    Promise.resolve({
+      body: [
+        {
+          user: {
+            login: "bob"
+          },
+          state: "CHANGES_REQUESTED"
+        }
+      ]
+    })
+  );
+
+  return sample.execute(false, { reviewers: ["test_dev"] }).then(() => {
+    assert.equal(sample.mocks.res.status.callCount, 1);
+    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [202]);
     assert.equal(sample.mocks.res.end.callCount, 1);
   });
 });
