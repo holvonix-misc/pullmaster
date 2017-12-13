@@ -28,6 +28,8 @@ const defaultSettings = {
   secretToken: "WebHook shared secret",
   accessToken: "OAUTH access token",
   reviewers: ["__non-existent-example-user"],
+  // people who can issue commands via comments
+  admins: ["__non-existent-example-admin"],
   // add comments showing what the bot does
   useComments: false
 };
@@ -40,6 +42,10 @@ function handle(settings: any, req: any, res: any) {
     if (action === "opened") {
       return handlePullRequestOpened(settings, req, res);
     }
+  } else if (event == "issue_comment" && "pull_request" in req.body.issue) {
+    if (action === "created") {
+      return handlePullRequestCommentCreated(settings, req, res);
+    }
   }
 
   // Ignore it!
@@ -51,10 +57,6 @@ function handle(settings: any, req: any, res: any) {
  * Assigns a reviewer to a new pull request from a list of eligble reviewers.
  * Reviewers with the least assigned reviews on open pull requests will be
  * prioritized for assignment.
- *
- * @param {object} settings
- * @param {object} req
- * @param {object} res
  */
 function handlePullRequestOpened(settings: any, req: any, res: any) {
   const pullRequest = req.body.pull_request;
@@ -77,7 +79,7 @@ function handlePullRequestOpened(settings: any, req: any, res: any) {
       .catch(err => {
         console.error(err.stack);
         res
-          .status(err.statusCode ? err.statusCode : 500)
+          .status(err.statusCode ? err.statusCode : 503)
           .send(err.message)
           .end();
       })
@@ -85,10 +87,74 @@ function handlePullRequestOpened(settings: any, req: any, res: any) {
 }
 
 /**
+ * Handles commands issues via a pull request comment.
+ */
+function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
+  const pullRequest = req.body.issue.pull_request;
+  const author = req.body.comment.user.login || "";
+  const content = req.body.comment.body || "";
+  const commentPostUrl = req.body.issue.comments_url;
+  console.log(`Comment on PR: ${pullRequest.title} by ${author}`);
+
+  // Validate the request
+  return validateRequest(settings, req)
+    .then(() => {
+      if (!settings.admins.includes(author)) {
+        // Ignore commands from non-admins
+        const error: any = new Error(`${author} is not an admin`);
+        error.statusCode = 202;
+        throw error;
+      }
+    })
+    .then(() => {
+      if (content.match(/(^|\b)#shipitnow($|\b)/i)) {
+        // TODO: merge immediately
+        if (settings.useComments) {
+          return makeRequest(settings, commentPostUrl, {
+            body: {
+              body: `Command: Per @${author}, merging immediately (TODO)`
+            }
+          });
+        }
+      } else if (content.match(/(^|\b)#shipit($|\b)/i)) {
+        // TODO: merge when green
+        if (settings.useComments) {
+          return makeRequest(settings, commentPostUrl, {
+            body: {
+              body: `Command: Per @${author}, merging when CI status is green (TODO)`
+            }
+          });
+        }
+      }
+
+      // Ignore anything that is not a known command
+      const error: any = new Error(`No known command in body.`);
+      error.statusCode = 202;
+      throw error;
+    })
+    .then(() => {
+      res.status(200).end();
+    })
+    .catch(err => {
+      if (200 == err.statusCode) {
+        res
+          .status(200)
+          .send(err.message)
+          .end();
+        return;
+      }
+
+      console.error(err.stack);
+      res
+        .status(err.statusCode ? err.statusCode : 503)
+        .send(err.message)
+        .end();
+    });
+}
+
+/**
  * Validates the request.
  * See https://developer.github.com/webhooks/securing.
- *
- * @param {object} req
  */
 function validateRequest(settings: any, req: any) {
   return Promise.resolve().then(() => {
@@ -109,9 +175,6 @@ function validateRequest(settings: any, req: any) {
 
 /**
  * Helper method for making requests to the GitHub API.
- *
- * @param {string} uri
- * @param {object} [options]
  */
 function makeRequest(settings: any, uri: string, opts: ?any) {
   var options = opts || {};
@@ -140,9 +203,6 @@ function makeRequest(settings: any, uri: string, opts: ?any) {
 
 /**
  * Recursively loads all open pull requests for the given repo.
- *
- * @param {object} repo
- * @param {number} [page]
  */
 function getPullRequests(settings: any, repo: any, page: ?number) {
   const PAGE_SIZE = 100;
@@ -182,8 +242,6 @@ function getPullRequests(settings: any, repo: any, page: ?number) {
 
 /**
  * Loads the reviews for the given pull requests.
- *
- * @param {object[]} pullRequests
  */
 function getReviewsForPullRequests(settings: any, pullRequests: Array<any>) {
   console.log(`Retrieving reviews for ${pullRequests.length} pull requests.`);
@@ -211,8 +269,6 @@ function getReviewsForPullRequests(settings: any, pullRequests: Array<any>) {
 /**
  * Calculates the current workloads of the reviewers specified in
  * "settings.reviewers".
- *
- * @param {object[]} pullRequests
  */
 function calculateWorkloads(settings: any, pullRequests: Array<any>) {
   // Calculate the current workloads of each reviewer
@@ -251,9 +307,6 @@ function calculateWorkloads(settings: any, pullRequests: Array<any>) {
 
 /**
  * Selects the next reviewer based on current reviewer workloads.
- *
- * @param {object} pullRequest
- * @param {object[]} pullRequests
  */
 function getNextReviewer(
   settings: any,
@@ -280,9 +333,6 @@ function getNextReviewer(
 
 /**
  * Assigns a reviewer to the given pull request.
- *
- * @param {string} reviewer
- * @param {object} pullRequest
  */
 function assignReviewer(settings: any, reviewer: string, pullRequest: any) {
   console.log(`Assigning pull request to ${reviewer}.`);
@@ -297,7 +347,7 @@ function assignReviewer(settings: any, reviewer: string, pullRequest: any) {
   if (settings.useComments) {
     return makeRequest(settings, pullRequest.comments_url, {
       body: {
-        body: `Assigning pull request to ${reviewer}.`
+        body: `Workflow: Assigning pull request to @${reviewer}.`
       }
     }).then(primary);
   }

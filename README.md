@@ -16,6 +16,8 @@ TODO: Fill-in with real repo instructions. :stuck_out_tongue:
 
 ## Usage
 
+This is very much alpha - not at all hardened. Use at your own risk.
+
 ## Notice and License
 
 ```
