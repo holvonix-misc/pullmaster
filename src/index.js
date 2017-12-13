@@ -77,11 +77,7 @@ function handlePullRequestOpened(settings: any, req: any, res: any) {
         res.status(200).end();
       })
       .catch(err => {
-        console.error(err.stack);
-        res
-          .status(err.statusCode ? err.statusCode : 503)
-          .send(err.message)
-          .end();
+        handleResponseThrow(err, req, res);
       })
   );
 }
@@ -107,7 +103,7 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
       }
     })
     .then(() => {
-      if (content.match(/(^|\b)#shipitnow($|\b)/i)) {
+      if (content.match(/(^|\s)#shipitnow($|\b)/gim)) {
         // TODO: merge immediately
         if (settings.useComments) {
           return makeRequest(settings, commentPostUrl, {
@@ -116,7 +112,7 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
             }
           });
         }
-      } else if (content.match(/(^|\b)#shipit($|\b)/i)) {
+      } else if (content.match(/(^|\s)#shipit($|\b)/gim)) {
         // TODO: merge when green
         if (settings.useComments) {
           return makeRequest(settings, commentPostUrl, {
@@ -136,20 +132,24 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
       res.status(200).end();
     })
     .catch(err => {
-      if (200 == err.statusCode) {
-        res
-          .status(200)
-          .send(err.message)
-          .end();
-        return;
-      }
-
-      console.error(err.stack);
-      res
-        .status(err.statusCode ? err.statusCode : 503)
-        .send(err.message)
-        .end();
+      handleResponseThrow(err, req, res);
     });
+}
+
+function handleResponseThrow(err, req, res) {
+  if (200 <= err.statusCode && err.statusCode < 300) {
+    res
+      .status(err.statusCode)
+      .send(err.message)
+      .end();
+    return;
+  }
+
+  console.error(err.stack);
+  res
+    .status(err.statusCode ? err.statusCode : 503)
+    .send(err.message)
+    .end();
 }
 
 /**
