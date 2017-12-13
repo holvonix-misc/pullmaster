@@ -77,7 +77,7 @@ function handlePullRequestOpened(settings: any, req: any, res: any) {
         res.status(200).end();
       })
       .catch(err => {
-        handleResponseThrow(err, req, res);
+        handleResponseThrow(settings, err, req, res);
       })
   );
 }
@@ -153,11 +153,11 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
       res.status(200).end();
     })
     .catch(err => {
-      handleResponseThrow(err, req, res);
+      handleResponseThrow(settings, err, req, res);
     });
 }
 
-function handleResponseThrow(err, req, res) {
+function handleResponseThrow(settings, err, req, res) {
   if (200 <= err.statusCode && err.statusCode < 300) {
     res
       .status(err.statusCode)
@@ -167,9 +167,13 @@ function handleResponseThrow(err, req, res) {
   }
 
   console.error(err.stack);
+  var msg = err.message;
+  if (settings.spewStack) {
+    msg = msg + "\n\n" + err.stack;
+  }
   res
     .status(err.statusCode ? err.statusCode : 503)
-    .send(err.message)
+    .send(msg)
     .end();
 }
 
