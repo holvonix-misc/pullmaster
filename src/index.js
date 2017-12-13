@@ -77,7 +77,7 @@ function handlePullRequestOpened(settings: any, req: any, res: any) {
         res.status(200).end();
       })
       .catch(err => {
-        handleResponseThrow(err, req, res);
+        handleResponseThrow(settings, err, req, res);
       })
   );
 }
@@ -87,6 +87,7 @@ function handlePullRequestOpened(settings: any, req: any, res: any) {
  */
 function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
   const pullRequest = req.body.issue.pull_request;
+  const pullRequestUrl = req.body.issue.pull_request.url;
   const author = req.body.comment.user.login || "";
   const content = req.body.comment.body || "";
   const commentPostUrl = req.body.issue.comments_url;
@@ -104,14 +105,34 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
     })
     .then(() => {
       if (content.match(/(^|\s)#shipitnow($|\b)/gim)) {
-        // TODO: merge immediately
+        const postIt = () => {
+          makeRequest(settings, pullRequestUrl).then(pr => {
+            const head = pr.head.sha;
+            const info = [
+              `Pull request author: @${pr.user.login}`,
+              `#shipitnow requested by: @${author}`,
+              `Pull request thread: ${pr.html_url}`
+            ];
+            return makeRequest(settings, pullRequestUrl + "/merge", {
+              body: {
+                commit_title: `Merge pull request #${pr.number} from ${
+                  pr.head.label
+                }`,
+                commit_message: info.join("\n\n"),
+                sha: head,
+                merge_method: "merge"
+              }
+            });
+          });
+        };
         if (settings.useComments) {
           return makeRequest(settings, commentPostUrl, {
             body: {
-              body: `Command: Per @${author}, merging immediately (TODO)`
+              body: `Command: Per @${author}, merging immediately`
             }
-          });
+          }).then(postIt);
         }
+        return postIt();
       } else if (content.match(/(^|\s)#shipit($|\b)/gim)) {
         // TODO: merge when green
         if (settings.useComments) {
@@ -132,11 +153,11 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
       res.status(200).end();
     })
     .catch(err => {
-      handleResponseThrow(err, req, res);
+      handleResponseThrow(settings, err, req, res);
     });
 }
 
-function handleResponseThrow(err, req, res) {
+function handleResponseThrow(settings, err, req, res) {
   if (200 <= err.statusCode && err.statusCode < 300) {
     res
       .status(err.statusCode)
@@ -146,9 +167,13 @@ function handleResponseThrow(err, req, res) {
   }
 
   console.error(err.stack);
+  var msg = err.message;
+  if (settings.spewStack) {
+    msg = msg + "\n\n" + err.stack;
+  }
   res
     .status(err.statusCode ? err.statusCode : 503)
-    .send(err.message)
+    .send(msg)
     .end();
 }
 

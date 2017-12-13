@@ -232,8 +232,30 @@ it("should post comment on #shipitnow", () => {
     })
   );
 
+  sample.mocks.got.onCall(1).returns(
+    Promise.resolve({
+      body: {
+        head: {
+          sha: "sha1",
+          label: "repo/branch"
+        },
+        user: {
+          login: "pr-author"
+        },
+        html_url: "/html",
+        number: 15
+      }
+    })
+  );
+
+  sample.mocks.got.onCall(2).returns(
+    Promise.resolve({
+      body: {}
+    })
+  );
+
   return sample.execute().then(() => {
-    assert(sample.mocks.got.calledOnce);
+    assert(sample.mocks.got.calledThrice);
     assert(
       sample.mocks.got.args[0][1].body.includes(
         "Per @admin_dev, merging immediately"
@@ -283,10 +305,32 @@ it("should not post comment on #shipit without useComments", () => {
 it("should not post comment on #shipitnow without useComments", () => {
   const sample = getIssueCommentSample();
 
+  sample.mocks.got.onCall(0).returns(
+    Promise.resolve({
+      body: {
+        head: {
+          sha: "sha1",
+          label: "repo/branch"
+        },
+        user: {
+          login: "pr-author"
+        },
+        html_url: "/html",
+        number: 15
+      }
+    })
+  );
+
+  sample.mocks.got.onCall(1).returns(
+    Promise.resolve({
+      body: {}
+    })
+  );
+
   return sample.execute(false, { useComments: false }).then(() => {
-    assert(sample.mocks.got.notCalled);
+    assert(sample.mocks.got.calledTwice);
     assert.equal(sample.mocks.res.status.callCount, 1);
-    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [202]);
+    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
     assert.equal(sample.mocks.res.end.callCount, 1);
   });
 });
