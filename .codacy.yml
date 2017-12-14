@@ -1,13 +1,15 @@
 engines:
- eslint:
-   enabled: true
- duplication:
-   enabled: true
-   exclude_paths:
-     - **/*.test.js
- metrics:
-   enabled: true
- coverage:
-   enabled: true
-   exclude_paths:
-     - **/*.test.js
+  eslint:
+    enabled: true
+  jshint:
+    enabled: true
+  duplication:
+    enabled: true
+    exclude_paths:
+      - src/*.test.js
+  metrics:
+    enabled: true
+  coverage:
+    enabled: true
+    exclude_paths:
+      - src/*.test.js
