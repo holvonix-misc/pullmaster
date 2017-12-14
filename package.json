@@ -1,6 +1,6 @@
 {
   "name": "pullmaster",
-  "version": "0.2.0-alpha.10",
+  "version": "0.2.0-alpha.11",
   "private": false,
   "description": "Master of Pulls 🏋",
   "main": "lib/index.js",
