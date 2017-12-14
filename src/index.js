@@ -220,11 +220,10 @@ function handleShipItNow(
 
 function handleCommitCommentCreated(settings: any, req: any, res: any) {
   const pullRequest = req.body.pull_request;
-  const requestor = req.body.review.user.login;
+  const requestor = req.body.comment.user.login;
   const content = req.body.comment.body || "";
   const theSha = req.body.comment.commit_id;
   const pullsUrl = req.body.repository.pulls_url;
-  const commentPostUrl = pullRequest.comments_url;
 
   const prefix = "* pullmaster-1-shipit:\n```yaml\n";
   const suffix = "\n```";
