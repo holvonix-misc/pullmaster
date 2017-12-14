@@ -262,9 +262,9 @@ function handleDeferShipIt(
       const u: string = pr.base.repo.commits_url;
       const post = u.replace("{/sha}", pr.head.sha) + "/comments";
       const stringy = JSON.stringify(meta);
-      return makeRequest(settings, commentPostUrl, {
+      return makeRequest(settings, post, {
         body: {
-          body: `## begin pullmaster-shipit\n\n${stringy}\n## end pullmaster-shipit`
+          body: `### begin pullmaster-shipit\n\n\`${stringy}\`\n### end pullmaster-shipit`
         }
       });
     });
@@ -377,8 +377,7 @@ function getPullRequests(settings: any, repo: any, page: ?number) {
       pr.requested_reviewers = pr.requested_reviewers.filter(reviewer =>
         settings.reviewers.includes(reviewer.login)
       );
-    });
-    // If more pages exists, recursively retrieve the next page
+    }); // If more pages exists, recursively retrieve the next page
     if (pullRequests.length === PAGE_SIZE) {
       return getPullRequests(settings, repo, page + 1).then(_pullRequests =>
         pullRequests.concat(_pullRequests)
@@ -426,8 +425,7 @@ function getPullRequests(settings: any, repo: any, page: ?number) {
     // These are awaiting the reviewer's initial review
     pr.requested_reviewers.forEach(reviewer => {
       reviewers[reviewer.login]++;
-    });
-    // For these the reviewer has requested changes, and has yet to approve the // pull request
+    }); // For these the reviewer has requested changes, and has yet to approve the // pull request
     pr.reviews.forEach(review => {
       reviewers[review.user.login]++;
     });
