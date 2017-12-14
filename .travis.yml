@@ -7,8 +7,8 @@ before_install:
 - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.3.2
 - export PATH=$HOME/.yarn/bin:$PATH
 - export BRANCH="${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}"
-- yarn global add greenkeeper-lockfile@1
-- yarn global add codecov
+- yarn global add greenkeeper-lockfile@1 codecov
+- if [[ -z "${CODACY_PROJECT_TOKEN}" ]]; then yarn global add codacy-coverage; fi
 cache: false
 install:
 - |
@@ -21,6 +21,10 @@ before_script: greenkeeper-lockfile-update
 script:
 - yarn test
 - yarn nyc report --reporter=lcov && codecov
+- |
+  if [[ -z "${CODACY_PROJECT_TOKEN}" ]]; then
+    cat ./coverage/lcov.info | codacy-coverage ;
+  fi
 after_script: greenkeeper-lockfile-upload
 stages:
 - name: test
@@ -61,3 +65,4 @@ env:
   - secure: d08u+cBSeffYJ3ALC0wI5CI4AF/boNJ3TNtyVSZ0ZNm9VLb2LKUXtf/AqKn4SkiZ+b0pt03OIY0df7WyZO0l0lkNkVRPgUurUgqpEDoehDzPGXtP7BFkSC3Auq48R8e1bu9zR1nSv/FcdVCeRQPEWiO5ztHX40HVRREiarz6pFPBiU1vXjuvbdyP3sv76yFRqLj5eOgmI0HXadWCbVEUxJfMxvXusWWXNyAyK3EMX2tn5AVAbhUj3mJ9LGyx+wtsuIWiQTO+nxxq5ImI3Szth6/XB7QeGLBIrtI2NoEKU+gcTdpm4grRuy7myMlw16gWu4unZjkJpFOhEcQiDPkT6/A/4u4w8mjABvMrdxYpuC/sCPqgMv9cMytHAP5HwKQFtscxSTh+GC6hyAEIdINFt6dQM2lbFi7QThgTp6aup2OWQP6Hkf8Wq5+hfwk5BLJ8HdWUKc69Gvx5xg2Hr8tNeEi/kDuK+NBNDEh0gaXRYcfiWE1hViWKr/ZvOPLh0iM8OGgR2t3G86wWYobVutnxpB6sabXu/dKD/xc/Uo/MGKoHl1id930DfhJzfoBH2omrkeR2sFPjxHtouJ2U51Y0ZwupriZMRyKWVDYvHMRqfBhRBq0ZwovE0xxekQbKastGuYnQzedfOpNtCUg41ZnXjAj8X1VHZFraiG+HUX0aH+Q=
   - secure: be23K5oU5NI9E3SpsH3AvsQDYWqoKioOuKFc6J4oZCHovrgn5rAgKEUyjnqCXwN5Awaj2UsUSiJGWnXPZD407ZXrsVLn2cYF5MQe1QHj7imL9qSLi03xtmlls/OGViXXWw3cQtDa2bqhidu4qD4Cbdmnes9UUq6WAskhMApQdzsTcL+BO9sDLK2SSbG0kOfH2J3FSkp4FBzXdsV4MZ1bFoS+VA3b39d4e0FEpPN37eP2oREnu5t5Tyk8Om6H0yL3MQGaV2VA8XxCRcKSVP/BJVtEh6nZrlJAhnW6nRbSfKa17KEOhtbjnfcScQed/B/ep1UExrLArjlkAG5D/FSEwzFaYp9OSTjqABIhrF8YGTySPHAai+CgTmYHdNz669dTiLsMOLi7SnoO4J77r+zgcSr2mfsy8+asPKTkfNY9ghO3gsG5dzz+mpjupE3bHxjxqu85sWdd4eO+wykQ4SUJty0IH900F95EFg+kuZKo87EPGcolckKX0IwFm/ykoOKLZ6y4FMYIkTrFQU20f00oiz07pjoCwZTmih8V418sSDY3k7jzTvOeLO0yh8QhR0tTgmzfokV0Vmz9yAnQ8kdrXMueIQed9cTOO1KaN4fJeRtnJ5vWeQPZjYZSyYrkRfNNBDyXJ4vi2IeOBYTvsi8hc4w/s/ktW90NscWnPJRSSFU=
   - secure: q945L8VlaiQkn836kYu64nv8R6BLXc07J3dfFJv1gMEO306f0Ti+8ZIDBW2lbAd7yIS6TNWKtSxUzUz5jUVsd2FeuxW1J+GnLZYqyDen70qiSKrXNyjywIyN+ItI/kySBnMhckdy8DNAWoeIrheMiyihisbwh4nfT0cfnstLYGOW83BSe7NYV0pAYv1dhDSLbUxTkW8RQ1rmSXeHWjRnQxXoYxc3SbtuVk2i4V356MuEwL7zdnnfobxyhmu8TSNyaGBSZ+OO284DVvOslrqCbHp3GE9+lQ/OzQdZisK1378fkd1JDWMkchq6rQSyP/hJcwDv0shgcsSwsRg2eUPJyAjjwRC4HA8JT/VIq5kY0uCB+xwzRQkcCp4WjeQppm27OLbqOQ2TeYi54t0TyN7iiCI0EweHYIn5gQEDAlJw6m5Yv/423bGXisClxxpGHY/Ra2UDLQZrcQDycJtXbxUVON9+M6i2kzwi2N0FIovfYmfke3kpn0/9ojl2sLflPXz4YGR3JkpUj50K8e9xukaUxvx0Cg1r4uV6LlZWrrDZUuciidXf+XO5fLQ6HPbDSTUJp+AMgPi8SvDqzgFNix78kOmdmnVq448cBpAUTynqz/JIiFfqr+Sua0HGQmzvii/bVa9MJCf8cYwkg9FWs/7jv8aOtTIMpoFpXR9pXuMs8xM=
+  - secure: tnXGs5TxO+o4/Fc5OY4X74+EoLXHGRQFsXXqB5U4o91GTbiGacjZ2Q5bEru0U1PzrrXPMejM45bNYZEhqtwUeOo/dJFjfJoExE9IMz+sqYAd4SQbV/XLWj+25HrajwDQ74QoL6/gQ4Y8tagDOo/rNTSLr344c9PuL+BzFTLCpVsmAMko/RjIZAIXUoVxFtPLi+r6hZT55T9IIyYGu5i6LpIMe1fn+lXWKHQz2bYKsaG5L7gQMkKZMFMuKaCHmqp1ITM95S4ho+/Qi/aAKgRntPB3LGVtKgLrbikDYljKHUlF0Mc3baJRtR4p5wKlHWln8XrrE6NAI9ebgMKv1r7vogCHRWn7Xmgg1qi71And1LiSKF+vs7ON4mrikVpD+4/Pzf3SRd8iKpry3q/Gvz/z1SV0v17ottGzBVjvP+YkO4GHRTDZk9CY9cW7sSADtBPLgvtov+tsBtWw0dkb79trnhXqKzLQ+Db/byFsDnDWnMohYBDF8vr9L+U8R1f3EJcttTrM9MZllqpMu8WQr43Soo9tqfSfaY0p4JkkqKvKe9MhYgeDEoiiRzPxaK7CYrAHlvlrx34667UkRBKrXSXAF2qErFefCTH2JbGRERknQSdQHUNCI9/VsjmbtIeeuaSICl9xMKraK/PpL9eGCEhSjNg+9+S6MRD/V9MhpMLJ7K0=
