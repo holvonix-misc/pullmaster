@@ -288,7 +288,11 @@ it("should merge and post comment on #shipitnow comment", () => {
       body: {
         title: "title",
         url: "/pull/15",
-        commit_url: "/commits{/sha}",
+        base: {
+          repo: {
+            commits_url: "/commits{/sha}"
+          }
+        },
         head: {
           sha: "sha1",
           label: "repo/branch"
@@ -336,8 +340,10 @@ it("should post comment on #shipit comment", () => {
       body: {
         title: "title",
         url: "/pull/15",
-        repository: {
-          commits_url: "/commits{/sha}"
+        base: {
+          repo: {
+            commits_url: "/commits{/sha}"
+          }
         },
         head: {
           sha: "sha1",
@@ -382,8 +388,10 @@ it("should not post comment on #shipit comment without useComments", () => {
       body: {
         title: "title",
         url: "/pull/15",
-        repository: {
-          commits_url: "/commits{/sha}"
+        base: {
+          repo: {
+            commits_url: "/commits{/sha}"
+          }
         },
         head: {
           sha: "sha1",
@@ -501,8 +509,10 @@ function getReviewSample() {
         },
         html_url: "/html",
         comments_url: "/comments",
-        repository: {
-          commits_url: "/commits{/sha}"
+        base: {
+          repo: {
+            commits_url: "/commits{/sha}"
+          }
         }
       },
       review: {
