@@ -54,8 +54,8 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
-    "github-api": "^3.0.0",
-    "got": "^8.0.1"
+    "got": "^8.0.1",
+    "js-yaml": "^3.10.0"
   },
   "devDependencies": {
     "babel-preset-env": "^1.6.1",

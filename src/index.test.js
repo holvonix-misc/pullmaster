@@ -374,7 +374,21 @@ it("should post comment on #shipit comment", () => {
         "ok @admin_dev, merging on green"
       )
     );
-    assert(sample.mocks.got.args[2][1].body.body.includes("pullmaster"));
+    assert.equal(sample.mocks.got.args[2][0].path, "/commits/sha1/comments");
+    assert.equal(
+      sample.mocks.got.args[2][1].body.body,
+      `* pullmaster-1-shipit:
+\`\`\`
+pr: 15
+url: /pull/15
+shipit: /issue/comment
+requestor: admin_dev
+bot: '#non-existent-example-bot'
+commit: sha1
+digest: 9ff058ec2a2ea1163cf0577f56ebb008a40d8592f12c5d1eac5c1b2421709df0
+
+\`\`\``
+    );
     assert.equal(sample.mocks.res.status.callCount, 1);
     assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
     assert.equal(sample.mocks.res.end.callCount, 1);
@@ -603,6 +617,7 @@ it("should post comment on #shipit review", () => {
         "ok @admin_dev, merging on green"
       )
     );
+    assert.equal(sample.mocks.got.args[1][0].path, "/commits/sha1/comments");
     assert(sample.mocks.got.args[1][1].body.body.includes("pullmaster"));
     assert.equal(sample.mocks.res.status.callCount, 1);
     assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);

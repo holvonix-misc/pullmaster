@@ -22,6 +22,7 @@ limitations under the License.
 const crypto = require("crypto");
 const got = require("got");
 const url = require("url");
+const yaml = require("js-yaml");
 
 const defaultSettings = {
   user: "#non-existent-example-bot",
@@ -234,7 +235,7 @@ function handleDeferShipIt(
         pr.head.sha
       ];
       const digest = crypto
-        .createHmac("sha1", settings.metadataSealSecretToken)
+        .createHmac("sha256", settings.metadataSealSecretToken)
         .update(JSON.stringify(sealThis))
         .digest("hex");
       const meta = {
@@ -261,10 +262,10 @@ function handleDeferShipIt(
       const meta = z[1];
       const u: string = pr.base.repo.commits_url;
       const post = u.replace("{/sha}", "/" + pr.head.sha) + "/comments";
-      const stringy = JSON.stringify(meta);
+      const stringy = yaml.safeDump(meta);
       return makeRequest(settings, post, {
         body: {
-          body: `### begin pullmaster-shipit\n\n\`${stringy}\`\n### end pullmaster-shipit`
+          body: `* pullmaster-1-shipit:\n\`\`\`\n${stringy}\n\`\`\``
         }
       });
     });
@@ -377,8 +378,7 @@ function getPullRequests(settings: any, repo: any, page: ?number) {
       pr.requested_reviewers = pr.requested_reviewers.filter(reviewer =>
         settings.reviewers.includes(reviewer.login)
       );
-    });
-    // If more pages exists, recursively retrieve the next page
+    }); // If more pages exists, recursively retrieve the next page
     if (pullRequests.length === PAGE_SIZE) {
       return getPullRequests(settings, repo, page + 1).then(_pullRequests =>
         pullRequests.concat(_pullRequests)
@@ -426,8 +426,7 @@ function getPullRequests(settings: any, repo: any, page: ?number) {
     // These are awaiting the reviewer's initial review
     pr.requested_reviewers.forEach(reviewer => {
       reviewers[reviewer.login]++;
-    });
-    // For these the reviewer has requested changes, and has yet to approve the // pull request
+    }); // For these the reviewer has requested changes, and has yet to approve the // pull request
     pr.reviews.forEach(review => {
       reviewers[review.user.login]++;
     });
