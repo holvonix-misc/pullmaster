@@ -181,6 +181,7 @@ function handlePullRequestCommands(
                 console.log(`Submitted merge: ${s}`);
               })
               .catch(err => {
+                console.log(`Merge exception`);
                 if (err.statusCode == 405) {
                   console.log(`Unable to merge.`);
                   return makeRequest(settings, commentPostUrl, {
