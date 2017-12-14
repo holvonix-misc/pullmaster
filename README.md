@@ -21,7 +21,7 @@ We eat our own dogfood! The holvonix-open GitHub org uses pullmaster via
 
 * On creation of a pull request, a reviewer with the least code review load will
   be chosen.
-* A repository admin can comment on the PR or submit a review (TODO: #11) to issue a command to the bot:
+* A repository admin can comment on the PR or submit a review to issue a command to the bot:
   * `#shipitnow` - requests an immediate merge, ignoring CI status
   * `#shipit` - requests a merge when CI goes green (TODO #12)
 
