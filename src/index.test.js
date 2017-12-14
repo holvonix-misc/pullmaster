@@ -481,16 +481,6 @@ it("should ignore comments by non-admins", () => {
     assert.equal(sample.mocks.res.end.callCount, 1);
   });
 });
-it("should ignore comments without commands", () => {
-  const sample = getIssueCommentSample(); // needs whitespace
-  sample.mocks.req.body.comment.body = "never#shipit";
-  return sample.execute().then(() => {
-    assert(sample.mocks.got.notCalled);
-    assert.equal(sample.mocks.res.status.callCount, 1);
-    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [202]);
-    assert.equal(sample.mocks.res.end.callCount, 1);
-  });
-});
 function getReviewSample() {
   const mockSettings = {
     secretToken: "foo",
@@ -721,16 +711,6 @@ it("should fail to merge and not complain on #shipitnow review with 503", () => 
 it("should ignore reviews by non-admins", () => {
   const sample = getReviewSample();
   sample.mocks.req.body.review.user.login = "non-admin";
-  return sample.execute().then(() => {
-    assert(sample.mocks.got.notCalled);
-    assert.equal(sample.mocks.res.status.callCount, 1);
-    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [202]);
-    assert.equal(sample.mocks.res.end.callCount, 1);
-  });
-});
-it("should ignore reviews without commands", () => {
-  const sample = getReviewSample(); // needs whitespace
-  sample.mocks.req.body.review.body = "never#shipit";
   return sample.execute().then(() => {
     assert(sample.mocks.got.notCalled);
     assert.equal(sample.mocks.res.status.callCount, 1);

@@ -182,12 +182,44 @@ function handlePullRequestCommands(
       commentPostUrl,
       approvalUrl
     );
+  } else {
+    // Otherwise, see if there is an existing ship it, and a green PR.
+    return checkPrGreen(settings, req, res, pullRequest);
   }
+}
 
-  // Ignore anything that is not a known command
-  const error: any = new Error(`No known command in body.`);
-  error.statusCode = 202;
-  throw error;
+function checkPrGreen(settings: any, req: any, res: any, pullRequest: any) {
+  return makeRequest(settings, pullRequest.url).then(pr => {
+    if (!isPrGreen(pr)) {
+      return;
+    }
+    const theSha = pr.head.sha;
+    const pullsUrl = pr.base.repo.pulls_url;
+    const commitCommentsUrl = pr.base.repo.commits_url + "/comments";
+
+    return makeRequest(
+      settings,
+      commitCommentsUrl.replace("{/sha}", "/" + theSha)
+    ).then(comments => {
+      var ret = Promise.resolve(0);
+      for (var i = 0; i < comments.length; i++) {
+        const comment = comments[i];
+        if (comment.user.login == settings.user) {
+          const content = comment.body || "";
+          const theSha = comment.commit_id;
+
+          ret = ret
+            .then(() => {
+              return processCommitComment(settings, content, theSha, pullsUrl);
+            })
+            .catch(err => {
+              console.error(err.stack);
+            }); // Ignore errors in a comment.
+        }
+      }
+      return ret;
+    });
+  });
 }
 
 function handleShipItNow(
@@ -237,11 +269,11 @@ function handleCommitStatusSuccess(settings: any, req: any, res: any) {
     for (var i = 0; i < comments.length; i++) {
       const comment = comments[i];
       if (comment.user.login == settings.user) {
+        const content = comment.body || "";
+        const theSha = comment.commit_id;
+
         ret = ret
           .then(() => {
-            const content = comment.body || "";
-            const theSha = comment.commit_id;
-
             return processCommitComment(settings, content, theSha, pullsUrl);
           })
           .catch(err => {
@@ -331,10 +363,9 @@ function processCommitComment(
           throw err;
         }
         if (!isPrGreen(pr)) {
-          var err: any = new Error("PR not yet green");
-          console.error(pr.mergeable_state);
-          console.error(pr.state);
-          console.error(JSON.stringify(pr));
+          var err: any = new Error(
+            `PR not yet green - ${pr.mergeable_state} - ${pr.state}`
+          );
           err.statusCode = 202;
           throw err;
         }
