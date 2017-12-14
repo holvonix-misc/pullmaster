@@ -221,7 +221,7 @@ function handleShipItNow(
 }
 
 function isPrGreen(pr: any) {
-  return pr.mergeable_state === "clean" && !pr.merged && pr.state !== "closed";
+  return pr.mergeable_state === "clean" && pr.state !== "closed";
 }
 
 function handleCommitStatusSuccess(settings: any, req: any, res: any) {
