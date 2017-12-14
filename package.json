@@ -1,6 +1,6 @@
 {
   "name": "pullmaster",
-  "version": "0.3.0-alpha.10",
+  "version": "0.4.0-alpha.1",
   "private": false,
   "description": "Master your pulls 🏋",
   "main": "lib/index.js",
@@ -22,7 +22,7 @@
     "node": ">=6.9.0",
     "yarn": "^1.3.2"
   },
-  "keywords": ["github", "workflow", "pull-requests", "api"],
+  "keywords": ["github", "workflow", "pull-requests", "automation", "pull request", "api"],
   "lint-staged": {
     "src/**/*.{js,jsx}": ["prettier --parser flow --write", "git add"],
     "**/*.{json,md}": ["prettier --write", "git add"]
