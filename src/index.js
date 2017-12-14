@@ -332,6 +332,9 @@ function processCommitComment(
         }
         if (!isPrGreen(pr)) {
           var err: any = new Error("PR not yet green");
+          console.error(pr.mergeable_state);
+          console.error(pr.state);
+          console.error(JSON.stringify(pr));
           err.statusCode = 202;
           throw err;
         }
