@@ -8,7 +8,7 @@ before_install:
 - export PATH=$HOME/.yarn/bin:$PATH
 - export BRANCH="${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}"
 - yarn global add greenkeeper-lockfile@1 codecov
-- if [[ -z "${CODACY_PROJECT_TOKEN}" ]]; then yarn global add codacy-coverage; fi
+- if [[ -v CODACY_PROJECT_TOKEN ]]; then yarn global add codacy-coverage; fi
 cache: false
 install:
 - |
@@ -22,7 +22,7 @@ script:
 - yarn test
 - yarn nyc report --reporter=lcov && codecov
 - |
-  if [[ -z "${CODACY_PROJECT_TOKEN}" ]]; then
+  if [[ -v CODACY_PROJECT_TOKEN ]]; then
     cat ./coverage/lcov.info | codacy-coverage ;
   fi
 after_script: greenkeeper-lockfile-upload
