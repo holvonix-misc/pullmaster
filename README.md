@@ -6,17 +6,32 @@
 [![Greenkeeper badge](https://badges.greenkeeper.io/holvonix-open/pullmaster.svg)](https://greenkeeper.io/)
 [![codecov](https://codecov.io/gh/holvonix-open/pullmaster/branch/master/graph/badge.svg)](https://codecov.io/gh/holvonix-open/pullmaster)
 
-Master of pulls 🏋
+Master your pulls 🏋
 
 [![NPM](https://nodei.co/npm/pullmaster.png?compact=true)](https://nodei.co/npm/pullmaster/)
-
-## Installation
-
-TODO: Fill-in with real repo instructions. :stuck_out_tongue:
 
 ## Usage
 
 This is very much alpha - not at all hardened. Use at your own risk.
+
+We eat our own dogfood! The holvonix-open GitHub org uses pullmaster via
+@holvonix-bot, and you'll see it in action on our issues and PRs.
+
+**Features:**
+
+* On creation of a pull request, a reviewer with the least code review load will
+  be chosen.
+* A repository admin can comment on the PR or submit a review (TODO: #11) to issue a command to the bot:
+  * `#shipitnow` - requests an immediate merge, ignoring CI status
+  * `#shipit` - requests a merge when CI goes green (TODO #12)
+
+When we hit release v1.0.0, we will try to fix our API and use semver to note
+changes. Until v1.0.0 (anything below 1.0, and also any 1.0 prereleases), we
+will change functionality arbitrarily.
+
+## Installation
+
+TODO: Fill-in with real repo instructions. :stuck_out_tongue:
 
 ## Notice and License
 

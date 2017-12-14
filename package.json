@@ -2,7 +2,7 @@
   "name": "pullmaster",
   "version": "0.2.0-alpha.11",
   "private": false,
-  "description": "Master of Pulls 🏋",
+  "description": "Master your pulls 🏋",
   "main": "lib/index.js",
   "scripts": {
     "build": "yarn run clean && yarn babel src/ -d lib/",
