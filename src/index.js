@@ -216,7 +216,9 @@ function handleShipItNow(
   return postIt();
 }
 
-// comment.commit_id,body,user.login, repository.pulls_url
+function isPrGreen(pr: any) {
+  return pr.mergeable_state === "clean" && !pr.merged && pr.state !== "closed";
+}
 
 function handleCommitCommentCreated(settings: any, req: any, res: any) {
   const pullRequest = req.body.pull_request;
@@ -281,36 +283,37 @@ function handleCommitCommentCreated(settings: any, req: any, res: any) {
     .then(m => {
       const meta = m || {};
       const prData = makeRequest(settings, meta.url);
-      return prData
-        .then(pr => {
-          console.log(`Got PR info: ${pr.html_url}`);
-          if (
-            pr.mergeable_state !== "clean" ||
-            pr.merged ||
-            pr.state === "closed" ||
-            pr.head.sha !== meta.commit
-          ) {
-            var err: any = new Error("PR not yet green");
-            err.statusCode = 202;
-            throw err;
-          }
-          if (settings.useComments) {
-            console.log(`Sent comment.`);
-            return makeRequest(settings, pr.comments_url, {
-              body: {
-                body: `[cmd] \uD83D\uDEA2 \u2705 hey @${requestor}, PR is green, merging now\n\nsee ${
-                  meta.shipit
-                }\nverification code: ${meta.digest}`
-              }
-            }).then(() => [pr, meta]);
-          }
-          return Promise.resolve([pr, meta]);
-        })
-        .then(z => {
+      return prData.then(pr => {
+        console.log(`Got PR info: ${pr.html_url}`);
+        if (pr.head.sha !== meta.commit) {
+          var err: any = new Error("PR changed head");
+          err.statusCode = 202;
+          throw err;
+        }
+        if (!isPrGreen(pr)) {
+          var err: any = new Error("PR not yet green");
+          err.statusCode = 202;
+          throw err;
+        }
+        const mergeFunc = z => {
           const pr = z[0];
           const meta = z[1];
           return doMerge(settings, meta.requestor, pr, meta.shipit, "shipit");
-        });
+        };
+        if (settings.useComments) {
+          console.log(`Sent comment.`);
+          return makeRequest(settings, pr.comments_url, {
+            body: {
+              body: `[cmd] \uD83D\uDEA2 \u2705 hey @${requestor}, PR is green, merging now\n\nsee ${
+                meta.shipit
+              }\nverification code: ${meta.digest}`
+            }
+          })
+            .then(() => [pr, meta])
+            .then(mergeFunc);
+        }
+        return Promise.resolve([pr, meta]).then(mergeFunc);
+      });
     });
 }
 
@@ -327,41 +330,60 @@ function handleDeferShipIt(
   const prData = pullRequest.head
     ? Promise.resolve(pullRequest)
     : makeRequest(settings, pullRequest.url);
-  return prData
-    .then(pr => {
-      console.log(`Got PR info: ${pr.html_url}`);
-      const sealThis = [
-        pr.number,
-        pr.url,
-        approvalUrl,
-        requestor,
-        settings.user,
-        pr.head.sha
-      ];
-      const digest = crypto
-        .createHmac("sha256", settings.metadataSealSecretToken)
-        .update(JSON.stringify(sealThis))
-        .digest("hex");
-      const meta = {
-        pr: pr.number,
-        url: pr.url,
-        shipit: approvalUrl,
-        requestor: requestor,
-        bot: settings.user,
-        commit: pr.head.sha,
-        digest: digest
+  return prData.then(pr => {
+    console.log(`Got PR info: ${pr.html_url}`);
+    const sealThis = [
+      pr.number,
+      pr.url,
+      approvalUrl,
+      requestor,
+      settings.user,
+      pr.head.sha
+    ];
+    const digest = crypto
+      .createHmac("sha256", settings.metadataSealSecretToken)
+      .update(JSON.stringify(sealThis))
+      .digest("hex");
+    const meta = {
+      pr: pr.number,
+      url: pr.url,
+      shipit: approvalUrl,
+      requestor: requestor,
+      bot: settings.user,
+      commit: pr.head.sha,
+      digest: digest
+    };
+    if (isPrGreen(pr)) {
+      const mergeFunc = z => {
+        const pr = z[0];
+        const meta = z[1];
+        return doMerge(
+          settings,
+          meta.requestor,
+          pr,
+          meta.shipit,
+          "shipit"
+        ).then(() => {
+          var err: any = new Error("PR immediately merged");
+          err.statusCode = 200;
+          throw err;
+        });
       };
       if (settings.useComments) {
         console.log(`Sent comment.`);
-        return makeRequest(settings, commentPostUrl, {
+        return makeRequest(settings, pr.comments_url, {
           body: {
-            body: `[cmd] \uD83D\uDEA2 \u23F1 ok @${requestor}, merging on green\n\nsee ${approvalUrl}\nverification code: ${digest}`
+            body: `[cmd] \uD83D\uDEA2 \u2705 ok @${requestor}, PR is green, merging now\n\nsee ${
+              meta.shipit
+            }\nverification code: ${meta.digest}`
           }
-        }).then(() => [pr, meta]);
+        })
+          .then(() => [pr, meta])
+          .then(mergeFunc);
       }
-      return Promise.resolve([pr, meta]);
-    })
-    .then(z => {
+      return Promise.resolve([pr, meta]).then(mergeFunc);
+    }
+    const commentFunc = z => {
       const pr = z[0];
       const meta = z[1];
       const u: string = pr.base.repo.commits_url;
@@ -372,7 +394,19 @@ function handleDeferShipIt(
           body: `* pullmaster-1-shipit:\n\`\`\`yaml\n${stringy}\n\`\`\``
         }
       });
-    });
+    };
+    if (settings.useComments) {
+      console.log(`Sent comment.`);
+      return makeRequest(settings, commentPostUrl, {
+        body: {
+          body: `[cmd] \uD83D\uDEA2 \u23F1 ok @${requestor}, merging on green\n\nsee ${approvalUrl}\nverification code: ${digest}`
+        }
+      })
+        .then(() => [pr, meta])
+        .then(commentFunc);
+    }
+    return Promise.resolve([pr, meta]).then(commentFunc);
+  });
 }
 
 function doMerge(settings, requestor, pr, approvalUrl, cmd) {
@@ -385,7 +419,7 @@ function doMerge(settings, requestor, pr, approvalUrl, cmd) {
     `\u270D\uFE0F PR author: @${pr.user.login}`,
     `\uD83D\uDCD9 PR thread: ${pr.html_url}`,
     `\uD83D\uDEA2 #${icmd} from: @${requestor}`,
-    `\uD83D\uDC4D #${icmd} at: @${approvalUrl}`
+    `\uD83D\uDC4D #${icmd} at: ${approvalUrl}`
   ];
   return makeRequest(settings, pr.url + "/merge", {
     method: "PUT",

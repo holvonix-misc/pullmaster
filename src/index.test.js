@@ -322,7 +322,7 @@ it("should merge and post comment on #shipitnow comment", () => {
     assert.equal(sample.mocks.got.args[2][0].path, "/pull/15/merge");
     assert.deepEqual(sample.mocks.got.args[2][1].body, {
       commit_message:
-        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/issue/comment",
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: /issue/comment",
       commit_title: "Merge pull request #15 from repo/branch",
       merge_method: "merge",
       sha: "sha1"
@@ -461,7 +461,7 @@ it("should merge and not post comment on #shipitnow comment without useComments"
     assert.equal(sample.mocks.got.args[1][0].path, "/pull/15/merge");
     assert.deepEqual(sample.mocks.got.args[1][1].body, {
       commit_message:
-        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/issue/comment",
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: /issue/comment",
       commit_title: "Merge pull request #15 from repo/branch",
       merge_method: "merge",
       sha: "sha1"
@@ -587,7 +587,7 @@ it("should merge and post comment on #shipitnow review", () => {
     assert.equal(sample.mocks.got.args[1][0].path, "/pull/15/merge");
     assert.deepEqual(sample.mocks.got.args[1][1].body, {
       commit_message:
-        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/review",
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: /review",
       commit_title: "Merge pull request #15 from repo/branch",
       merge_method: "merge",
       sha: "sha1"
@@ -652,7 +652,7 @@ it("should merge and not post comment on #shipitnow review without useComments",
     assert.equal(sample.mocks.got.args[0][0].path, "/pull/15/merge");
     assert.deepEqual(sample.mocks.got.args[0][1].body, {
       commit_message:
-        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/review",
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: /review",
       commit_title: "Merge pull request #15 from repo/branch",
       merge_method: "merge",
       sha: "sha1"
@@ -687,7 +687,7 @@ it("should fail to merge and complain on #shipitnow review with 405 without useC
     assert.equal(sample.mocks.got.args[0][0].path, "/pull/15/merge");
     assert.deepEqual(sample.mocks.got.args[0][1].body, {
       commit_message:
-        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/review",
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: /review",
       commit_title: "Merge pull request #15 from repo/branch",
       merge_method: "merge",
       sha: "sha1"
@@ -708,7 +708,7 @@ it("should fail to merge and not complain on #shipitnow review with 503", () => 
     assert.equal(sample.mocks.got.args[0][0].path, "/pull/15/merge");
     assert.deepEqual(sample.mocks.got.args[0][1].body, {
       commit_message:
-        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/review",
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: /review",
       commit_title: "Merge pull request #15 from repo/branch",
       merge_method: "merge",
       sha: "sha1"
