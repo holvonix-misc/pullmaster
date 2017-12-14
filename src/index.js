@@ -33,7 +33,9 @@ const defaultSettings = {
   admins: [""],
   spewStack: false,
   // add comments showing what the bot does
-  useComments: false
+  useComments: false,
+  // whether to allow comments (as opposed to reviews only) to issue commands
+  allowCommandsViaComments: false
 };
 
 function handle(settingsNew: any, req: any, res: any) {
@@ -49,7 +51,7 @@ function handle(settingsNew: any, req: any, res: any) {
       func = handlePullRequestOpened;
     }
   } else if (event === "issue_comment" && "pull_request" in req.body.issue) {
-    if (action === "created") {
+    if (action === "created" && settings.allowCommandsViaComments) {
       func = handlePullRequestCommentCreated;
     }
   } else if (

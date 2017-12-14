@@ -216,7 +216,8 @@ function getIssueCommentSample() {
     reviewers: ["bob", "alice"],
     useComments: true,
     metadataSealSecretToken: "ef983ludej..ke.d93i/",
-    admins: ["admin_dev"]
+    admins: ["admin_dev"],
+    allowCommandsViaComments: true
   };
   const mockGot = sinon.stub();
 
