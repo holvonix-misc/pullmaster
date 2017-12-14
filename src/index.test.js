@@ -378,7 +378,7 @@ it("should post comment on #shipit comment", () => {
     assert.equal(
       sample.mocks.got.args[2][1].body.body,
       `* pullmaster-1-shipit:
-\`\`\`
+\`\`\`yaml
 pr: 15
 url: /pull/15
 shipit: /issue/comment

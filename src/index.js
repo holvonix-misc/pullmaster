@@ -47,12 +47,17 @@ function handle(settingsNew: any, req: any, res: any) {
   if (event === "pull_request") {
     if (action === "opened") {
       func = handlePullRequestOpened;
-    } else if (action === "labeled") {
-      //pull_request:labeled{label.name=shipit, pull_request.mergeable_state=clean}
     }
   } else if (event === "issue_comment" && "pull_request" in req.body.issue) {
     if (action === "created") {
       func = handlePullRequestCommentCreated;
+    }
+  } else if (
+    event === "commit_comment" &&
+    req.body.comment.user.login === settings.user
+  ) {
+    if (action === "created") {
+      func = handleCommitCommentCreated;
     }
   } else if (event === "pull_request_review") {
     if (action === "submitted" || action === "edited") {
@@ -204,12 +209,112 @@ function handleShipItNow(
     console.log(`Sent comment.`);
     return makeRequest(settings, commentPostUrl, {
       body: {
-        body: `[cmd] 🚢 💨 ok @${requestor}, merging immediately\n\nsee ${approvalUrl}`
+        body: `[cmd] \uD83D\uDEA2 \uD83D\uDCA8 ok @${requestor}, merging immediately\n\nsee ${approvalUrl}`
       }
     }).then(postIt);
   }
   return postIt();
 }
+
+// comment.commit_id,body,user.login, repository.pulls_url
+
+function handleCommitCommentCreated(settings: any, req: any, res: any) {
+  const pullRequest = req.body.pull_request;
+  const requestor = req.body.review.user.login;
+  const content = req.body.comment.body || "";
+  const theSha = req.body.comment.commit_id;
+  const pullsUrl = req.body.repository.pulls_url;
+  const commentPostUrl = pullRequest.comments_url;
+
+  const prefix = "* pullmaster-1-shipit:\n```yaml\n";
+  const suffix = "\n```";
+
+  return Promise.resolve(0)
+    .then(() => {
+      if (content.startsWith(prefix) && content.endsWith(suffix)) {
+        const yamlBody = content.substr(
+          prefix.length,
+          content.length - prefix.length - suffix.length
+        );
+        const msg = yaml.safeLoad(yamlBody);
+        const meta = {
+          pr: msg.pr,
+          url: msg.url,
+          shipit: msg.shipit,
+          requestor: msg.requestor,
+          bot: msg.bot,
+          commit: msg.commit,
+          digest: msg.digest
+        };
+        const sealThis = [
+          meta.pr,
+          meta.url,
+          meta.shipit,
+          meta.requestor,
+          meta.bot,
+          meta.commit
+        ];
+        const digest = crypto
+          .createHmac("sha256", settings.metadataSealSecretToken)
+          .update(JSON.stringify(sealThis))
+          .digest("hex");
+        if (
+          digest &&
+          digest === meta.digest &&
+          meta.bot === settings.user &&
+          meta.commit === theSha &&
+          meta.url == pullsUrl.replace("{/number}", `/${meta.pr}`)
+        ) {
+          console.log(`Validated pullmaster meta`);
+          return meta;
+        }
+        var err: any = new Error("Invalid pullmaster metadata");
+        err.statusCode = 403;
+        throw err;
+      }
+    })
+    .catch(() => {
+      // Hide errors before validating.
+      var err: any = new Error("Invalid pullmaster metadata");
+      err.statusCode = 202;
+      throw err;
+    })
+    .then(m => {
+      const meta = m || {};
+      const prData = makeRequest(settings, meta.url);
+      return prData
+        .then(pr => {
+          console.log(`Got PR info: ${pr.html_url}`);
+          if (
+            pr.mergeable_state !== "clean" ||
+            pr.merged ||
+            pr.state === "closed" ||
+            pr.head.sha !== meta.commit
+          ) {
+            var err: any = new Error("PR not yet green");
+            err.statusCode = 202;
+            throw err;
+          }
+          if (settings.useComments) {
+            console.log(`Sent comment.`);
+            return makeRequest(settings, pr.comments_url, {
+              body: {
+                body: `[cmd] \uD83D\uDEA2 \u2705 hey @${requestor}, PR is green, merging now\n\nsee ${
+                  meta.shipit
+                }\nverification code: ${meta.digest}`
+              }
+            }).then(() => [pr, meta]);
+          }
+          return Promise.resolve([pr, meta]);
+        })
+        .then(z => {
+          const pr = z[0];
+          const meta = z[1];
+          return doMerge(settings, meta.requestor, pr, meta.shipit, "shipit");
+        });
+    });
+}
+
 function handleDeferShipIt(
   settings: any,
   req: any,
@@ -251,7 +356,7 @@ function handleDeferShipIt(
         console.log(`Sent comment.`);
         return makeRequest(settings, commentPostUrl, {
           body: {
-            body: `[cmd] 🚢 ⏱ ok @${requestor}, merging on green\n\nsee ${approvalUrl}\nverification code: ${digest}`
+            body: `[cmd] \uD83D\uDEA2 \u23F1 ok @${requestor}, merging on green\n\nsee ${approvalUrl}\nverification code: ${digest}`
           }
         }).then(() => [pr, meta]);
       }
@@ -265,19 +370,23 @@ function handleDeferShipIt(
       const stringy = yaml.safeDump(meta);
       return makeRequest(settings, post, {
         body: {
-          body: `* pullmaster-1-shipit:\n\`\`\`\n${stringy}\n\`\`\``
+          body: `* pullmaster-1-shipit:\n\`\`\`yaml\n${stringy}\n\`\`\``
         }
       });
     });
 }
-function doMerge(settings, requestor, pr, approvalUrl) {
+
+function doMerge(settings, requestor, pr, approvalUrl, cmd) {
   const head = pr.head.sha;
+
+  const icmd = cmd || "shipitnow";
+
   const info = [
     pr.title + "\n",
-    `✍️ PR author: @${pr.user.login}`,
-    `📙 PR thread: ${pr.html_url}`,
-    `🚢 #shipitnow from: @${requestor}`,
-    `👍 #shipitnow at: @${approvalUrl}`
+    `\u270D\uFE0F PR author: @${pr.user.login}`,
+    `\uD83D\uDCD9 PR thread: ${pr.html_url}`,
+    `\uD83D\uDEA2 #${icmd} from: @${requestor}`,
+    `\uD83D\uDC4D #${icmd} at: @${approvalUrl}`
   ];
   return makeRequest(settings, pr.url + "/merge", {
     method: "PUT",
@@ -298,7 +407,7 @@ function doMerge(settings, requestor, pr, approvalUrl) {
         console.log(`Unable to merge.`);
         return makeRequest(settings, pr.comments_url, {
           body: {
-            body: `[err] 🚢 ❌ sorry @${requestor} - unable to merge. @${
+            body: `[err] \uD83D\uDEA2 \u274C sorry @${requestor} - unable to merge. @${
               pr.user.login
             } - take a look at your pull request, resolve any issues first, and then try to merge again @${requestor}.`
           }
@@ -307,6 +416,7 @@ function doMerge(settings, requestor, pr, approvalUrl) {
       throw err;
     });
 }
+
 function handleResponseThrow(settings, err, req, res) {
   if (200 <= err.statusCode && err.statusCode < 300) {
     res
@@ -324,7 +434,9 @@ function handleResponseThrow(settings, err, req, res) {
     .status(err.statusCode ? err.statusCode : 503)
     .send(msg)
     .end();
-} /**
+}
+
+/**
  * Validates the request.
  * See https://developer.github.com/webhooks/securing.
  */
@@ -343,9 +455,11 @@ function validateRequest(settings: any, req: any) {
     }
   });
 }
+
 /**
  * Helper method for making requests to the GitHub API.
- */ function makeRequest(settings: any, uri: string, opts: ?any) {
+ */
+function makeRequest(settings: any, uri: string, opts: ?any) {
   var options = opts || {}; // Add appropriate headers
   options.headers || (options.headers = {});
   options.headers.Accept =
@@ -357,7 +471,9 @@ function validateRequest(settings: any, req: any) {
   const parts = url.parse(uri);
   parts.auth = `${settings.user}:${settings.accessToken}`; // Make the request
   return got(parts, options).then(res => res.body);
-} /**
+}
+
+/**
  * Recursively loads all open pull requests for the given repo.
  */
 function getPullRequests(settings: any, repo: any, page: ?number) {
@@ -374,7 +490,8 @@ function getPullRequests(settings: any, repo: any, page: ?number) {
   }).then(pullRequests => {
     // Filter out requested reviews who are not found in "settings.reviewers"
     pullRequests.forEach(pr => {
-      pr.requested_reviewers || (pr.requested_reviewers = []); // Filter out reviewers not found in "settings.reviewers"
+      pr.requested_reviewers || (pr.requested_reviewers = []);
+      // Filter out reviewers not found in "settings.reviewers"
       pr.requested_reviewers = pr.requested_reviewers.filter(reviewer =>
         settings.reviewers.includes(reviewer.login)
       );
@@ -388,12 +505,11 @@ function getPullRequests(settings: any, repo: any, page: ?number) {
     return getReviewsForPullRequests(settings, pullRequests);
   });
 }
+
 /**
  * Loads the reviews for the given pull requests.
- */ function getReviewsForPullRequests(
-  settings: any,
-  pullRequests: Array<any>
-) {
+ */
+function getReviewsForPullRequests(settings: any, pullRequests: Array<any>) {
   console.log(`Retrieving reviews for ${pullRequests.length} pull requests.`); // Make a request for each pull request's reviews
   const tasks = pullRequests.map(pr =>
     makeRequest(settings, `${pr.url}/reviews`)
@@ -413,10 +529,12 @@ function getPullRequests(settings: any, repo: any, page: ?number) {
     return pullRequests;
   });
 }
+
 /**
  * Calculates the current workloads of the reviewers specified in
  * "settings.reviewers".
- */ function calculateWorkloads(settings: any, pullRequests: Array<any>) {
+ */
+function calculateWorkloads(settings: any, pullRequests: Array<any>) {
   // Calculate the current workloads of each reviewer
   const reviewers = {};
   settings.reviewers.forEach(reviewer => {
@@ -442,7 +560,9 @@ function getPullRequests(settings: any, repo: any, page: ?number) {
   workloads.sort((a, b) => a.reviews - b.reviews);
   console.log(`Calculated workloads for ${workloads.length} reviewers.`);
   return workloads;
-} /**
+}
+
+/**
  * Selects the next reviewer based on current reviewer workloads.
  */
 function getNextReviewer(
@@ -464,7 +584,9 @@ function getNextReviewer(
     throw error;
   }
   return workloads[choice].login;
-} /**
+}
+
+/**
  * Assigns a reviewer to the given pull request.
  */
 function assignReviewer(settings: any, reviewer: string, pullRequest: any) {
@@ -479,12 +601,13 @@ function assignReviewer(settings: any, reviewer: string, pullRequest: any) {
   if (settings.useComments) {
     return makeRequest(settings, pullRequest.comments_url, {
       body: {
-        body: `[task] 📙 👉 @${reviewer} please review`
+        body: `[task] \uD83D\uDCD9 \uD83D\uDC49 @${reviewer} please review`
       }
     }).then(primary);
   }
   return primary();
 }
+
 module.exports = {
   handle
 };
