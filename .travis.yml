@@ -20,7 +20,7 @@ install:
 before_script: greenkeeper-lockfile-update
 script:
 - yarn test
-- yarn nyc report --reporter=lcov > coverage.lcov && codecov
+- yarn nyc report --reporter=lcov && codecov
 after_script: greenkeeper-lockfile-upload
 stages:
 - name: test

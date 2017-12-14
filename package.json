@@ -14,8 +14,9 @@
     "prepare": "yarn build",
     "prepublishOnly": "yarn test",
     "preversion": "yarn test",
-    "test": "yarn lint && yarn run flow && yarn build && yarn test-only",
-    "test-only": "nyc mocha -t 60000 ./lib/*.test.js"
+    "test":
+      "yarn lint && yarn run flow && yarn build --source-maps && yarn test-only",
+    "test-only": "nyc mocha -t 60000 ./lib/"
   },
   "engines": {
     "node": ">=6.9.0",
@@ -57,6 +58,7 @@
     "got": "^8.0.1"
   },
   "devDependencies": {
+    "babel-preset-env": "^1.6.1",
     "js-devbox": "^3.0.1",
     "mocha": "^4.0.1",
     "nyc": "^11.3.0",
