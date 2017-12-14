@@ -223,9 +223,6 @@ function makeRequest(settings: any, uri: string, opts: ?any) {
   options.json = true;
   if (options.body) {
     options.headers["Content-Type"] = "application/json";
-    if (typeof options.body === "object") {
-      options.body = JSON.stringify(options.body);
-    }
   }
 
   // Add authentication

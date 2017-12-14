@@ -306,7 +306,7 @@ it("should post comment on #shipitnow", () => {
   return sample.execute().then(() => {
     assert(sample.mocks.got.calledThrice);
     assert(
-      sample.mocks.got.args[0][1].body.includes(
+      sample.mocks.got.args[0][1].body.body.includes(
         "Per @admin_dev, merging immediately"
       )
     );
@@ -329,7 +329,7 @@ it("should post comment on #shipit", () => {
   return sample.execute().then(() => {
     assert(sample.mocks.got.calledOnce);
     assert(
-      sample.mocks.got.args[0][1].body.includes(
+      sample.mocks.got.args[0][1].body.body.includes(
         "Per @admin_dev, merging when CI status is green"
       )
     );
