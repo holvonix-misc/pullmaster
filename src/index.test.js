@@ -215,6 +215,7 @@ function getIssueCommentSample() {
     secretToken: "foo",
     reviewers: ["bob", "alice"],
     useComments: true,
+    metadataSealSecretToken: "ef983ludej..ke.d93i/",
     admins: ["admin_dev"]
   };
   const mockGot = sinon.stub();
@@ -236,6 +237,7 @@ function getIssueCommentSample() {
       },
       comment: {
         body: "Yes\r\n\r\n#shipitnow indeed.",
+        html_url: "/issue/comment",
         user: {
           login: "admin_dev"
         }
@@ -284,6 +286,9 @@ it("should merge and post comment on #shipitnow comment", () => {
   sample.mocks.got.onCall(1).returns(
     Promise.resolve({
       body: {
+        title: "title",
+        url: "/pull/15",
+        commit_url: "/commits{/sha}",
         head: {
           sha: "sha1",
           label: "repo/branch"
@@ -307,13 +312,13 @@ it("should merge and post comment on #shipitnow comment", () => {
     assert(sample.mocks.got.calledThrice);
     assert(
       sample.mocks.got.args[0][1].body.body.includes(
-        "Per @admin_dev, merging immediately"
+        "ok @admin_dev, merging immediately"
       )
     );
     assert.equal(sample.mocks.got.args[2][0].path, "/pull/15/merge");
     assert.deepEqual(sample.mocks.got.args[2][1].body, {
       commit_message:
-        "Pull request author: @pr-author\n\n#shipitnow requested by: @admin_dev\n\nPull request thread: /html",
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/issue/comment",
       commit_title: "Merge pull request #15 from repo/branch",
       merge_method: "merge",
       sha: "sha1"
@@ -323,48 +328,17 @@ it("should merge and post comment on #shipitnow comment", () => {
     assert.equal(sample.mocks.res.end.callCount, 1);
   });
 });
-
 it("should post comment on #shipit comment", () => {
   const sample = getIssueCommentSample();
   sample.mocks.req.body.comment.body = "Hey now, #shipit.";
-
-  sample.mocks.got.onCall(0).returns(
-    Promise.resolve({
-      body: {}
-    })
-  );
-
-  return sample.execute().then(() => {
-    assert(sample.mocks.got.calledOnce);
-    assert(
-      sample.mocks.got.args[0][1].body.body.includes(
-        "Per @admin_dev, merging when CI status is green"
-      )
-    );
-    assert.equal(sample.mocks.res.status.callCount, 1);
-    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
-    assert.equal(sample.mocks.res.end.callCount, 1);
-  });
-});
-
-it("should not post comment on #shipit comment without useComments", () => {
-  const sample = getIssueCommentSample();
-  sample.mocks.req.body.comment.body = "Hey now, #shipit.";
-
-  return sample.execute(false, { useComments: false }).then(() => {
-    assert(sample.mocks.got.notCalled);
-    assert.equal(sample.mocks.res.status.callCount, 1);
-    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [202]);
-    assert.equal(sample.mocks.res.end.callCount, 1);
-  });
-});
-
-it("should merge and not post comment on #shipitnow comment without useComments", () => {
-  const sample = getIssueCommentSample();
-
   sample.mocks.got.onCall(0).returns(
     Promise.resolve({
       body: {
+        title: "title",
+        url: "/pull/15",
+        repository: {
+          commits_url: "/commits{/sha}"
+        },
         head: {
           sha: "sha1",
           label: "repo/branch"
@@ -377,19 +351,95 @@ it("should merge and not post comment on #shipitnow comment without useComments"
       }
     })
   );
-
   sample.mocks.got.onCall(1).returns(
     Promise.resolve({
       body: {}
     })
   );
-
+  sample.mocks.got.onCall(2).returns(
+    Promise.resolve({
+      body: {}
+    })
+  );
+  return sample.execute().then(() => {
+    assert(sample.mocks.got.calledThrice);
+    assert(
+      sample.mocks.got.args[1][1].body.body.includes(
+        "ok @admin_dev, merging on green"
+      )
+    );
+    assert(sample.mocks.got.args[2][1].body.body.includes("pullmaster"));
+    assert.equal(sample.mocks.res.status.callCount, 1);
+    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
+    assert.equal(sample.mocks.res.end.callCount, 1);
+  });
+});
+it("should not post comment on #shipit comment without useComments", () => {
+  const sample = getIssueCommentSample();
+  sample.mocks.req.body.comment.body = "Hey now, #shipit.";
+  sample.mocks.got.onCall(0).returns(
+    Promise.resolve({
+      body: {
+        title: "title",
+        url: "/pull/15",
+        repository: {
+          commits_url: "/commits{/sha}"
+        },
+        head: {
+          sha: "sha1",
+          label: "repo/branch"
+        },
+        user: {
+          login: "pr-author"
+        },
+        html_url: "/html",
+        number: 15
+      }
+    })
+  );
+  sample.mocks.got.onCall(1).returns(
+    Promise.resolve({
+      body: {}
+    })
+  );
+  return sample.execute(false, { useComments: false }).then(() => {
+    assert(sample.mocks.got.calledTwice);
+    assert(sample.mocks.got.args[1][1].body.body.includes("pullmaster"));
+    assert.equal(sample.mocks.res.status.callCount, 1);
+    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
+    assert.equal(sample.mocks.res.end.callCount, 1);
+  });
+});
+it("should merge and not post comment on #shipitnow comment without useComments", () => {
+  const sample = getIssueCommentSample();
+  sample.mocks.got.onCall(0).returns(
+    Promise.resolve({
+      body: {
+        title: "title",
+        url: "/pull/15",
+        head: {
+          sha: "sha1",
+          label: "repo/branch"
+        },
+        user: {
+          login: "pr-author"
+        },
+        html_url: "/html",
+        number: 15
+      }
+    })
+  );
+  sample.mocks.got.onCall(1).returns(
+    Promise.resolve({
+      body: {}
+    })
+  );
   return sample.execute(false, { useComments: false }).then(() => {
     assert(sample.mocks.got.calledTwice);
     assert.equal(sample.mocks.got.args[1][0].path, "/pull/15/merge");
     assert.deepEqual(sample.mocks.got.args[1][1].body, {
       commit_message:
-        "Pull request author: @pr-author\n\n#shipitnow requested by: @admin_dev\n\nPull request thread: /html",
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/issue/comment",
       commit_title: "Merge pull request #15 from repo/branch",
       merge_method: "merge",
       sha: "sha1"
@@ -399,11 +449,9 @@ it("should merge and not post comment on #shipitnow comment without useComments"
     assert.equal(sample.mocks.res.end.callCount, 1);
   });
 });
-
 it("should ignore comments by non-admins", () => {
   const sample = getIssueCommentSample();
   sample.mocks.req.body.comment.user.login = "non-admin";
-
   return sample.execute().then(() => {
     assert(sample.mocks.got.notCalled);
     assert.equal(sample.mocks.res.status.callCount, 1);
@@ -411,12 +459,9 @@ it("should ignore comments by non-admins", () => {
     assert.equal(sample.mocks.res.end.callCount, 1);
   });
 });
-
 it("should ignore comments without commands", () => {
-  const sample = getIssueCommentSample();
-  // needs whitespace
+  const sample = getIssueCommentSample(); // needs whitespace
   sample.mocks.req.body.comment.body = "never#shipit";
-
   return sample.execute().then(() => {
     assert(sample.mocks.got.notCalled);
     assert.equal(sample.mocks.res.status.callCount, 1);
@@ -424,21 +469,19 @@ it("should ignore comments without commands", () => {
     assert.equal(sample.mocks.res.end.callCount, 1);
   });
 });
-
 function getReviewSample() {
   const mockSettings = {
     secretToken: "foo",
     reviewers: ["bob", "alice"],
     useComments: true,
+    metadataSealSecretToken: "d4r3r",
     admins: ["admin_dev"]
   };
   const mockGot = sinon.stub();
-
   const program = proxyquire("./index.js", {
     "./settings.json": mockSettings,
     got: mockGot
   });
-
   const mockReq = {
     headers: {
       "x-github-event": "pull_request_review"
@@ -446,6 +489,7 @@ function getReviewSample() {
     body: {
       action: "submitted",
       pull_request: {
+        title: "title",
         url: "/pull/15",
         number: 15,
         head: {
@@ -456,23 +500,25 @@ function getReviewSample() {
           login: "pr-author"
         },
         html_url: "/html",
-        comments_url: "/comments"
+        comments_url: "/comments",
+        repository: {
+          commits_url: "/commits{/sha}"
+        }
       },
       review: {
         body: "Yes\r\n\r\n#shipitnow indeed.",
+        html_url: "/review",
         user: {
           login: "admin_dev"
         }
       }
     }
   };
-
   const mockRes = {
     send: sinon.stub().returnsThis(),
     end: sinon.stub().returnsThis(),
     status: sinon.stub().returnsThis()
   };
-
   return {
     execute: (bypassSecurity, overrideSettings) => {
       var settings = mockSettings;
@@ -495,33 +541,29 @@ function getReviewSample() {
     }
   };
 }
-
 it("should merge and post comment on #shipitnow review", () => {
   const sample = getReviewSample();
-
   sample.mocks.got.onCall(0).returns(
     Promise.resolve({
       body: {}
     })
   );
-
   sample.mocks.got.onCall(1).returns(
     Promise.resolve({
       body: {}
     })
   );
-
   return sample.execute().then(() => {
     assert(sample.mocks.got.calledTwice);
     assert(
       sample.mocks.got.args[0][1].body.body.includes(
-        "Per @admin_dev, merging immediately"
+        "ok @admin_dev, merging immediately"
       )
     );
     assert.equal(sample.mocks.got.args[1][0].path, "/pull/15/merge");
     assert.deepEqual(sample.mocks.got.args[1][1].body, {
       commit_message:
-        "Pull request author: @pr-author\n\n#shipitnow requested by: @admin_dev\n\nPull request thread: /html",
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/review",
       commit_title: "Merge pull request #15 from repo/branch",
       merge_method: "merge",
       sha: "sha1"
@@ -531,120 +573,117 @@ it("should merge and post comment on #shipitnow review", () => {
     assert.equal(sample.mocks.res.end.callCount, 1);
   });
 });
-
 it("should post comment on #shipit review", () => {
   const sample = getReviewSample();
   sample.mocks.req.body.review.body = "Hey now, #shipit.";
-
   sample.mocks.got.onCall(0).returns(
     Promise.resolve({
       body: {}
     })
   );
-
-  return sample.execute().then(() => {
-    assert(sample.mocks.got.calledOnce);
-    assert(
-      sample.mocks.got.args[0][1].body.body.includes(
-        "Per @admin_dev, merging when CI status is green"
-      )
-    );
-    assert.equal(sample.mocks.res.status.callCount, 1);
-    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
-    assert.equal(sample.mocks.res.end.callCount, 1);
-  });
-});
-
-it("should not post comment on #shipit review without useComments", () => {
-  const sample = getReviewSample();
-  sample.mocks.req.body.review.body = "Hey now, #shipit.";
-
-  return sample.execute(false, { useComments: false }).then(() => {
-    assert(sample.mocks.got.notCalled);
-    assert.equal(sample.mocks.res.status.callCount, 1);
-    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [202]);
-    assert.equal(sample.mocks.res.end.callCount, 1);
-  });
-});
-
-it("should merge and not post comment on #shipitnow review without useComments", () => {
-  const sample = getReviewSample();
-
-  sample.mocks.got.onCall(0).returns(
-    Promise.resolve({
-      body: {}
-    })
-  );
-
-  return sample.execute(false, { useComments: false }).then(() => {
-    assert(sample.mocks.got.calledOnce);
-    assert.equal(sample.mocks.got.args[0][0].path, "/pull/15/merge");
-    assert.deepEqual(sample.mocks.got.args[0][1].body, {
-      commit_message:
-        "Pull request author: @pr-author\n\n#shipitnow requested by: @admin_dev\n\nPull request thread: /html",
-      commit_title: "Merge pull request #15 from repo/branch",
-      merge_method: "merge",
-      sha: "sha1"
-    });
-    assert.equal(sample.mocks.res.status.callCount, 1);
-    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
-    assert.equal(sample.mocks.res.end.callCount, 1);
-  });
-});
-
-it("should ignore reviews by non-admins", () => {
-  const sample = getReviewSample();
-  sample.mocks.req.body.review.user.login = "non-admin";
-
-  return sample.execute().then(() => {
-    assert(sample.mocks.got.notCalled);
-    assert.equal(sample.mocks.res.status.callCount, 1);
-    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [202]);
-    assert.equal(sample.mocks.res.end.callCount, 1);
-  });
-});
-
-it("should fail to merge and complain on #shipitnow review with 405 without useComments", () => {
-  const sample = getReviewSample();
-  var mergeError = new Error("Cannot merge");
-  mergeError.statusCode = 405;
-  sample.mocks.got.onCall(0).returns(Promise.reject(mergeError));
-
   sample.mocks.got.onCall(1).returns(
     Promise.resolve({
       body: {}
     })
   );
-
-  return sample.execute(false, { useComments: false }).then(() => {
+  return sample.execute().then(() => {
     assert(sample.mocks.got.calledTwice);
-    assert.equal(sample.mocks.got.args[0][0].path, "/pull/15/merge");
-    assert.deepEqual(sample.mocks.got.args[0][1].body, {
-      commit_message:
-        "Pull request author: @pr-author\n\n#shipitnow requested by: @admin_dev\n\nPull request thread: /html",
-      commit_title: "Merge pull request #15 from repo/branch",
-      merge_method: "merge",
-      sha: "sha1"
-    });
-    assert(sample.mocks.got.args[1][1].body.body.includes("Sorry"));
+    assert(
+      sample.mocks.got.args[0][1].body.body.includes(
+        "ok @admin_dev, merging on green"
+      )
+    );
+    assert(sample.mocks.got.args[1][1].body.body.includes("pullmaster"));
     assert.equal(sample.mocks.res.status.callCount, 1);
     assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
     assert.equal(sample.mocks.res.end.callCount, 1);
   });
 });
-
-it("should fail to merge and not complain on #shipitnow review with 503", () => {
+it("should not post comment on #shipit review without useComments", () => {
   const sample = getReviewSample();
-  var mergeError = new Error("Cannot merge");
-  mergeError.statusCode = 503;
-  sample.mocks.got.onCall(0).returns(Promise.reject(mergeError));
-
+  sample.mocks.req.body.review.body = "Hey now, #shipit.";
+  sample.mocks.got.onCall(0).returns(
+    Promise.resolve({
+      body: {}
+    })
+  );
+  return sample.execute(false, { useComments: false }).then(() => {
+    assert(sample.mocks.got.calledOnce);
+    assert(sample.mocks.got.args[0][1].body.body.includes("pullmaster"));
+    assert.equal(sample.mocks.res.status.callCount, 1);
+    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
+    assert.equal(sample.mocks.res.end.callCount, 1);
+  });
+});
+it("should merge and not post comment on #shipitnow review without useComments", () => {
+  const sample = getReviewSample();
+  sample.mocks.got.onCall(0).returns(
+    Promise.resolve({
+      body: {}
+    })
+  );
   return sample.execute(false, { useComments: false }).then(() => {
     assert(sample.mocks.got.calledOnce);
     assert.equal(sample.mocks.got.args[0][0].path, "/pull/15/merge");
     assert.deepEqual(sample.mocks.got.args[0][1].body, {
       commit_message:
-        "Pull request author: @pr-author\n\n#shipitnow requested by: @admin_dev\n\nPull request thread: /html",
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/review",
+      commit_title: "Merge pull request #15 from repo/branch",
+      merge_method: "merge",
+      sha: "sha1"
+    });
+    assert.equal(sample.mocks.res.status.callCount, 1);
+    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
+    assert.equal(sample.mocks.res.end.callCount, 1);
+  });
+});
+it("should ignore reviews by non-admins", () => {
+  const sample = getReviewSample();
+  sample.mocks.req.body.review.user.login = "non-admin";
+  return sample.execute().then(() => {
+    assert(sample.mocks.got.notCalled);
+    assert.equal(sample.mocks.res.status.callCount, 1);
+    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [202]);
+    assert.equal(sample.mocks.res.end.callCount, 1);
+  });
+});
+it("should fail to merge and complain on #shipitnow review with 405 without useComments", () => {
+  const sample = getReviewSample();
+  var mergeError = new Error("Cannot merge");
+  mergeError.statusCode = 405;
+  sample.mocks.got.onCall(0).returns(Promise.reject(mergeError));
+  sample.mocks.got.onCall(1).returns(
+    Promise.resolve({
+      body: {}
+    })
+  );
+  return sample.execute(false, { useComments: false }).then(() => {
+    assert(sample.mocks.got.calledTwice);
+    assert.equal(sample.mocks.got.args[0][0].path, "/pull/15/merge");
+    assert.deepEqual(sample.mocks.got.args[0][1].body, {
+      commit_message:
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/review",
+      commit_title: "Merge pull request #15 from repo/branch",
+      merge_method: "merge",
+      sha: "sha1"
+    });
+    assert(sample.mocks.got.args[1][1].body.body.includes("sorry"));
+    assert.equal(sample.mocks.res.status.callCount, 1);
+    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
+    assert.equal(sample.mocks.res.end.callCount, 1);
+  });
+});
+it("should fail to merge and not complain on #shipitnow review with 503", () => {
+  const sample = getReviewSample();
+  var mergeError = new Error("Cannot merge");
+  mergeError.statusCode = 503;
+  sample.mocks.got.onCall(0).returns(Promise.reject(mergeError));
+  return sample.execute(false, { useComments: false }).then(() => {
+    assert(sample.mocks.got.calledOnce);
+    assert.equal(sample.mocks.got.args[0][0].path, "/pull/15/merge");
+    assert.deepEqual(sample.mocks.got.args[0][1].body, {
+      commit_message:
+        "title\n\n✍️ PR author: @pr-author\n📙 PR thread: /html\n🚢 #shipitnow from: @admin_dev\n👍 #shipitnow at: @/review",
       commit_title: "Merge pull request #15 from repo/branch",
       merge_method: "merge",
       sha: "sha1"
@@ -653,12 +692,10 @@ it("should fail to merge and not complain on #shipitnow review with 503", () => 
     assert.deepEqual(sample.mocks.res.status.getCall(0).args, [503]);
     assert.equal(sample.mocks.res.end.callCount, 1);
   });
-});
-
+}); //pull_request:labeled{label.name=shipit, pull_request.mergeable_state=clean}
 it("should ignore reviews by non-admins", () => {
   const sample = getReviewSample();
   sample.mocks.req.body.review.user.login = "non-admin";
-
   return sample.execute().then(() => {
     assert(sample.mocks.got.notCalled);
     assert.equal(sample.mocks.res.status.callCount, 1);
@@ -666,12 +703,9 @@ it("should ignore reviews by non-admins", () => {
     assert.equal(sample.mocks.res.end.callCount, 1);
   });
 });
-
 it("should ignore reviews without commands", () => {
-  const sample = getReviewSample();
-  // needs whitespace
+  const sample = getReviewSample(); // needs whitespace
   sample.mocks.req.body.review.body = "never#shipit";
-
   return sample.execute().then(() => {
     assert(sample.mocks.got.notCalled);
     assert.equal(sample.mocks.res.status.callCount, 1);
