@@ -244,7 +244,9 @@ function handleCommitStatusSuccess(settings: any, req: any, res: any) {
 
             return processCommitComment(settings, content, theSha, pullsUrl);
           })
-          .catch(() => {}); // Ignore errors in a comment.
+          .catch(err => {
+            console.error(err.stack);
+          }); // Ignore errors in a comment.
       }
     }
     return ret;
