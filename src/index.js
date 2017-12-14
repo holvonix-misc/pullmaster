@@ -128,10 +128,24 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
                 sha: head,
                 merge_method: "merge"
               }
-            }).then(b => {
-              const s = JSON.stringify(b);
-              console.log(`Submitted merge: ${s}`);
-            });
+            })
+              .then(b => {
+                const s = JSON.stringify(b);
+                console.log(`Submitted merge: ${s}`);
+              })
+              .catch(err => {
+                if (err.statusCode == 405) {
+                  console.log(`Unable to merge.`);
+                  return makeRequest(settings, commentPostUrl, {
+                    body: {
+                      body: `Sorry @${author} - unable to merge. @${
+                        pr.user.login
+                      } - take a look at your pull request, resolve any issues first, and then, @${author}, try to merge again.`
+                    }
+                  });
+                }
+                throw err;
+              });
           });
         };
         if (settings.useComments) {
