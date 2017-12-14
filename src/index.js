@@ -63,6 +63,10 @@ function handle(settingsNew: any, req: any, res: any) {
     if (action === "submitted" || action === "edited") {
       func = handlePullRequestReviewed;
     }
+  } else if (event === "status") {
+    if (req.body.state === "success") {
+      func = handleCommitStatusSuccess;
+    }
   }
 
   if (func != null) {
@@ -220,13 +224,47 @@ function isPrGreen(pr: any) {
   return pr.mergeable_state === "clean" && !pr.merged && pr.state !== "closed";
 }
 
+function handleCommitStatusSuccess(settings: any, req: any, res: any) {
+  const theSha = req.body.sha;
+  const commitCommentsUrl = req.body.repository.commits_url + "/comments";
+  const pullsUrl = req.body.repository.pulls_url;
+
+  return makeRequest(
+    settings,
+    commitCommentsUrl.replace("{/sha}", "/" + theSha)
+  ).then(comments => {
+    var ret = Promise.resolve(0);
+    for (var i = 0; i < comments.length; i++) {
+      const comment = comments[i];
+      if (comment.user.login == settings.user) {
+        ret = ret
+          .then(() => {
+            const content = comment.body || "";
+            const theSha = comment.commit_id;
+
+            return processCommitComment(settings, content, theSha, pullsUrl);
+          })
+          .catch(() => {}); // Ignore errors in a comment.
+      }
+    }
+    return ret;
+  });
+}
+
 function handleCommitCommentCreated(settings: any, req: any, res: any) {
-  const pullRequest = req.body.pull_request;
-  const requestor = req.body.comment.user.login;
   const content = req.body.comment.body || "";
   const theSha = req.body.comment.commit_id;
   const pullsUrl = req.body.repository.pulls_url;
 
+  return processCommitComment(settings, content, theSha, pullsUrl);
+}
+
+function processCommitComment(
+  settings: any,
+  content: string,
+  theSha: string,
+  pullsUrl: String
+) {
   const prefix = "* pullmaster-1-shipit:\n```yaml\n";
   const suffix = "\n```";
 
@@ -304,7 +342,9 @@ function handleCommitCommentCreated(settings: any, req: any, res: any) {
           console.log(`Sent comment.`);
           return makeRequest(settings, pr.comments_url, {
             body: {
-              body: `[cmd] \uD83D\uDEA2 \u2705 hey @${requestor}, PR is green, merging now\n\nsee ${
+              body: `[cmd] \uD83D\uDEA2 \u2705 hey @${
+                meta.requestor
+              }, PR is green, merging now\n\nsee ${
                 meta.shipit
               }\nverification code: ${meta.digest}`
             }
