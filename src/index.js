@@ -24,17 +24,20 @@ const got = require("got");
 const url = require("url");
 
 const defaultSettings = {
-  user: "__non-existent-example-bot",
+  user: "#non-existent-example-bot",
   secretToken: "WebHook shared secret",
   accessToken: "OAUTH access token",
-  reviewers: ["__non-existent-example-user"],
+  reviewers: [""],
   // people who can issue commands via comments
-  admins: ["__non-existent-example-admin"],
+  admins: [""],
+  spewStack: false,
   // add comments showing what the bot does
   useComments: false
 };
 
-function handle(settings: any, req: any, res: any) {
+function handle(settingsNew: any, req: any, res: any) {
+  var settings = Object.assign({}, defaultSettings, settingsNew);
+
   const action = req.body.action;
   const event = req.headers["x-github-event"];
 
@@ -91,7 +94,7 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
   const author = req.body.comment.user.login || "";
   const content = req.body.comment.body || "";
   const commentPostUrl = req.body.issue.comments_url;
-  console.log(`Comment on PR: ${pullRequest.title} by ${author}`);
+  console.log(`Comment on PR: ${pullRequestUrl} by ${author}`);
 
   // Validate the request
   return validateRequest(settings, req)
@@ -107,7 +110,7 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
     .then(() => {
       if (content.match(/(^|\s)#shipitnow($|\b)/gim)) {
         const postIt = () => {
-          makeRequest(settings, pullRequestUrl).then(pr => {
+          return makeRequest(settings, pullRequestUrl).then(pr => {
             console.log(`Got PR info: ${pr.html_url}`);
             const head = pr.head.sha;
             const info = [
