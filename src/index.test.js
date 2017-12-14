@@ -604,6 +604,69 @@ it("should ignore reviews by non-admins", () => {
   });
 });
 
+it("should fail to merge and complain on #shipitnow review with 405 without useComments", () => {
+  const sample = getReviewSample();
+  var mergeError = new Error("Cannot merge");
+  mergeError.statusCode = 405;
+  sample.mocks.got.onCall(0).returns(Promise.reject(mergeError));
+
+  sample.mocks.got.onCall(1).returns(
+    Promise.resolve({
+      body: {}
+    })
+  );
+
+  return sample.execute(false, { useComments: false }).then(() => {
+    assert(sample.mocks.got.calledTwice);
+    assert.equal(sample.mocks.got.args[0][0].path, "/pull/15/merge");
+    assert.deepEqual(sample.mocks.got.args[0][1].body, {
+      commit_message:
+        "Pull request author: @pr-author\n\n#shipitnow requested by: @admin_dev\n\nPull request thread: /html",
+      commit_title: "Merge pull request #15 from repo/branch",
+      merge_method: "merge",
+      sha: "sha1"
+    });
+    assert(sample.mocks.got.args[1][1].body.body.includes("Sorry"));
+    assert.equal(sample.mocks.res.status.callCount, 1);
+    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
+    assert.equal(sample.mocks.res.end.callCount, 1);
+  });
+});
+
+it("should fail to merge and not complain on #shipitnow review with 503", () => {
+  const sample = getReviewSample();
+  var mergeError = new Error("Cannot merge");
+  mergeError.statusCode = 503;
+  sample.mocks.got.onCall(0).returns(Promise.reject(mergeError));
+
+  return sample.execute(false, { useComments: false }).then(() => {
+    assert(sample.mocks.got.calledOnce);
+    assert.equal(sample.mocks.got.args[0][0].path, "/pull/15/merge");
+    assert.deepEqual(sample.mocks.got.args[0][1].body, {
+      commit_message:
+        "Pull request author: @pr-author\n\n#shipitnow requested by: @admin_dev\n\nPull request thread: /html",
+      commit_title: "Merge pull request #15 from repo/branch",
+      merge_method: "merge",
+      sha: "sha1"
+    });
+    assert.equal(sample.mocks.res.status.callCount, 1);
+    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [503]);
+    assert.equal(sample.mocks.res.end.callCount, 1);
+  });
+});
+
+it("should ignore reviews by non-admins", () => {
+  const sample = getReviewSample();
+  sample.mocks.req.body.review.user.login = "non-admin";
+
+  return sample.execute().then(() => {
+    assert(sample.mocks.got.notCalled);
+    assert.equal(sample.mocks.res.status.callCount, 1);
+    assert.deepEqual(sample.mocks.res.status.getCall(0).args, [202]);
+    assert.equal(sample.mocks.res.end.callCount, 1);
+  });
+});
+
 it("should ignore reviews without commands", () => {
   const sample = getReviewSample();
   // needs whitespace
