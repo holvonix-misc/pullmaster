@@ -231,7 +231,7 @@ function getIssueCommentSample() {
     body: {
       action: "created",
       issue: {
-        pull_request: { url: "/" },
+        pull_request: { url: "/pull/15" },
         comments_url: "/comments"
       },
       comment: {
@@ -272,7 +272,7 @@ function getIssueCommentSample() {
   };
 }
 
-it("should post comment on #shipitnow", () => {
+it("should merge and post comment on #shipitnow", () => {
   const sample = getIssueCommentSample();
 
   sample.mocks.got.onCall(0).returns(
@@ -310,6 +310,14 @@ it("should post comment on #shipitnow", () => {
         "Per @admin_dev, merging immediately"
       )
     );
+    assert.equal(sample.mocks.got.args[2][0].path, "/pull/15/merge");
+    assert.deepEqual(sample.mocks.got.args[2][1].body, {
+      commit_message:
+        "Pull request author: @pr-author\n\n#shipitnow requested by: @admin_dev\n\nPull request thread: /html",
+      commit_title: "Merge pull request #15 from repo/branch",
+      merge_method: "merge",
+      sha: "sha1"
+    });
     assert.equal(sample.mocks.res.status.callCount, 1);
     assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
     assert.equal(sample.mocks.res.end.callCount, 1);
@@ -351,7 +359,7 @@ it("should not post comment on #shipit without useComments", () => {
   });
 });
 
-it("should not post comment on #shipitnow without useComments", () => {
+it("should merge and not post comment on #shipitnow without useComments", () => {
   const sample = getIssueCommentSample();
 
   sample.mocks.got.onCall(0).returns(
@@ -378,6 +386,14 @@ it("should not post comment on #shipitnow without useComments", () => {
 
   return sample.execute(false, { useComments: false }).then(() => {
     assert(sample.mocks.got.calledTwice);
+    assert.equal(sample.mocks.got.args[1][0].path, "/pull/15/merge");
+    assert.deepEqual(sample.mocks.got.args[1][1].body, {
+      commit_message:
+        "Pull request author: @pr-author\n\n#shipitnow requested by: @admin_dev\n\nPull request thread: /html",
+      commit_title: "Merge pull request #15 from repo/branch",
+      merge_method: "merge",
+      sha: "sha1"
+    });
     assert.equal(sample.mocks.res.status.callCount, 1);
     assert.deepEqual(sample.mocks.res.status.getCall(0).args, [200]);
     assert.equal(sample.mocks.res.end.callCount, 1);
