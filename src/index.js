@@ -45,9 +45,13 @@ function handle(settingsNew: any, req: any, res: any) {
     if (action === "opened") {
       return handlePullRequestOpened(settings, req, res);
     }
-  } else if (event == "issue_comment" && "pull_request" in req.body.issue) {
+  } else if (event === "issue_comment" && "pull_request" in req.body.issue) {
     if (action === "created") {
       return handlePullRequestCommentCreated(settings, req, res);
+    }
+  } else if (event === "pull_request_review") {
+    if (action === "submitted" || action === "edited") {
+      return handlePullRequestReviewed(settings, req, res);
     }
   }
 
@@ -90,11 +94,51 @@ function handlePullRequestOpened(settings: any, req: any, res: any) {
  */
 function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
   const pullRequest = req.body.issue.pull_request;
-  const pullRequestUrl = req.body.issue.pull_request.url;
   const author = req.body.comment.user.login || "";
   const content = req.body.comment.body || "";
   const commentPostUrl = req.body.issue.comments_url;
-  console.log(`Comment on PR: ${pullRequestUrl} by ${author}`);
+  console.log(`Comment on PR: ${pullRequest.url} by ${author}`);
+  return handlePullRequestCommands(
+    settings,
+    req,
+    res,
+    pullRequest,
+    author,
+    content,
+    commentPostUrl
+  );
+}
+
+/**
+ * Handles commands issues via a pull request review.
+ */
+function handlePullRequestReviewed(settings: any, req: any, res: any) {
+  const pullRequest = req.body.pull_request;
+  const author = req.body.review.user.login || "";
+  const content = req.body.review.body || "";
+  const commentPostUrl = pullRequest.comments_url;
+  console.log(`Review on PR: ${pullRequest.url} by ${author}`);
+  return handlePullRequestCommands(
+    settings,
+    req,
+    res,
+    pullRequest,
+    author,
+    content,
+    commentPostUrl
+  );
+}
+
+function handlePullRequestCommands(
+  settings: any,
+  req: any,
+  res: any,
+  pullRequest: any,
+  author: string,
+  content: string,
+  commentPostUrl: string
+) {
+  const pullRequestUrl = pullRequest.url;
 
   // Validate the request
   return validateRequest(settings, req)
@@ -110,7 +154,10 @@ function handlePullRequestCommentCreated(settings: any, req: any, res: any) {
     .then(() => {
       if (content.match(/(^|\s)#shipitnow($|\b)/gim)) {
         const postIt = () => {
-          return makeRequest(settings, pullRequestUrl).then(pr => {
+          const prData = pullRequest.head
+            ? Promise.resolve(pullRequest)
+            : makeRequest(settings, pullRequestUrl);
+          return prData.then(pr => {
             console.log(`Got PR info: ${pr.html_url}`);
             const head = pr.head.sha;
             const info = [
