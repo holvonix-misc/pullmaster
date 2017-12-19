@@ -2,11 +2,11 @@ See general rules in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Licensing
 
-If you want to make a Pull Request, you will need an Contributor License Agreement (CLA) signed.  See https://github.com/holvonix-open/contributors
+If you want to make a Pull Request, you will need a Contributor License Agreement (CLA) signed.  See https://github.com/holvonix-open/contributors
 
 If you have a signed CLA: the CLA governs.
 
-If you don't have a signed CLA: any contribution (including, but not limited to, all bug reports, issues, pull requests, commits, emails to mailing lists) you submit to this project will be treated, per Section 5 of the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0, the "License"), as submitted under the terms and conditions of the License; by making any contribution, you agree to the terms and conditions of the License.
+If you don't have a signed CLA: any contribution (including, but not limited to, all bug reports, issues, commits, emails to mailing lists) you submit to this project will be treated, per Section 5 of the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0, the "License"), as submitted under the terms and conditions of the License; by making any contribution, you agree to the terms and conditions of the License.
 
 Unless you own all the rights to your contribution, you can't submit it. For example, if your employer or any other third party has intellectual property rights in the contribution, you may not submit it. If you are unsure, please contact a legal professional; we can't provide legal advice.
 
