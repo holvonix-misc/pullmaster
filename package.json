@@ -61,7 +61,7 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
-    "got": "^8.0.1",
+    "got": "^8.1.0",
     "js-yaml": "^3.10.0"
   },
   "devDependencies": {
