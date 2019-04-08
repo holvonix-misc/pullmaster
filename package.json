@@ -62,7 +62,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "got": "^8.0.1",
-    "js-yaml": "^3.10.0"
+    "js-yaml": "^3.13.1"
   },
   "devDependencies": {
     "babel-preset-env": "^1.6.1",
